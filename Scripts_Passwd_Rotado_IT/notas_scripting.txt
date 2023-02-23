@@ -1,0 +1,323 @@
+/etc/passwd : Almacena información de la cuenta de usuario. Almacena el nombre de cuenta, si tiene contraseña en /etc/shadow, UID y GID del usuario, comentarios sobre la cuenta, el directorio de inicio y la shell de inicio.
+/etc/shadow : Almacena la contraseña cifrada (hash) de los usuarios e información sobre caducidad y validez de la cuenta.
+/etc/group : Contiene una lista de los grupos existentes en el sistema. Cada usuario del sistema pertenece por lo menos a un grupo, considerándose a este como el grupo primario del usuario. 
+							Si es necesario, a los usuarios se les puede asignar a grupos adicionales. Cada línea contiene el nombre del grupo, la contraseña del grupo, el identificador del grupo (GID) y los miembros que lo integran.
+/etc/gshadow : Almacena las contraseñas cifradas (hash) de los grupos e información sobre los miembros normales y administradores del grupo.
+/etc/login.defs : En este archivo se definen las variables que controlan los aspectos de la creación de usuarios.
+
+Los usuarios bloqueados tienen ! antes de la password en el fichero /etc/passwd
+Los usuarios de sistema tienen * antes de la password en el fichero /etc/shadow
+
+chage -l USUARIO -> muestra info de la cuenta
+passwd -l USUARIO -> bloquear cuenta
+passwd -u USUARIO -> desbloquear cuenta
+passwd -S USUARIO -> informacion de la cuenta
+id USUARIO -> información de UID, GID y GRUPO
+
+egrep ^[^:]+:[^\!*] /etc/shadow -> Ver usuarios que tienen contraseñas (no están bloqueados) 
+	Ejemplo
+	temip:$6$vyvAaaDc$3JYS6qWKJc80Vq8b0aisnqYqjUQzdTdGBIM4W9YK2AFMYxLtEUOE731cqUG8GSYnwBprIWD4h.hcLjjtMgOyb1:19318:1:90:7:90::  -> NO bloqueado
+  acloc:!!$6$U1NyQkNs$fvBVag/OXys8MOGdGjqNEP90RxajWEquKpMDbBibAw5Z8F5S5.4FJg2wMUFrM2Qj0nXQhyj01VugddGjskQJv1:18080:1:99999:7:90:: -> SI bloqueado  
+
+**** usuarios ftp -> mirar en /varf/log el fichero xferlog -> stat xferlog (revisar última modificación)
+**** Cambiar pass usuario en script LINUX -> chpasswd < fichero_pass -> el fichero con formato usuario:pass
+**** Cambiar pass usuario en script SOLARIS (el comando simplemente encripta la password)->  crypt(password,salt) and insert/modify it into /etc/shadow
+
+
+########################################################################################################
+
+https://www.zeppelinux.es/administrar-grupos-de-usuarios-en-linux/
+
+########################################################################################################
+
+#### USERMOD #### -> Renombrar usuarios
+
+–a, – -append : Agrega al usuario a los grupos complementarios. Usese solo con la opción -G.
+-c, – -comment COMENTARIO : COMENTARIO será el nuevo valor del campo de comentario en el archivo /etc/passwd. Normalmente se modifica con la herramienta chfn.
+-d, – -home HOME_DIR : HOME_DIR será el nuevo valor para el directorio de inicio del usuario. Si se utiliza conjuntamente con la opción -m, el contenido del directorio de inicio actual se moverá al nuevo directorio de inicio, que se crea si aún no existe.
+-e, – -expiredate EXPIRE_DATE : Establece la fecha en la que expira la cuenta de usuario. La fecha que se especifica en EXPIRE_DATE deberá seguir formato AAAA-MM-DD.
+-f, – -inactive INACTIVE : En INACTIVE se establece el número de días que transcurrirán desde que expira una contraseña hasta que la cuenta se deshabilita permanentemente. Un valor de 0 deshabilita la cuenta tan pronto como la contraseña ha expirado y un valor de -1 deshabilita la función.
+-g, – -gid GROUP : En GROUP se establece el nombre del grupo o el identificador de grupo (GID) del nuevo grupo primario del usuario. El grupo debe existir previamente antes de establecerlo.
+-G, – -groups GROUP1[,GROUP2,…[,GROUPn]]] : Similar a la opción anterior, pero permite introducir varios grupos separados por comas. Los grupos deben existir con anterioridad para poder añadirlo. Si el usuario es actualmente miembro de un grupo que no está en la lista, el usuario será eliminado del grupo. Este comportamiento se puede cambiar utilizando la opción -a, que agrega al usuario a la lista de grupos complementarios actual.
+-l, – -login NEW_LOGIN : Permite cambiar el nombre de cuenta del usuario al establecido en NEW_LOGIN. Probablemente, el nombre del directorio de inicio del usuario deberá cambiarse manualmente para que tenga el nuevo nombre de cuenta.
+-L, – -lock : Bloquea la contraseña del usuario. Esto pone un ! delante de la contraseña cifrada en el archivo /etc/shadow, desactivando efectivamente la contraseña. No puede usar esta opción con -p o -U.
+Nota: Si lo que queremos es bloquear la cuenta (no solo acceder con una contraseña), tendremos que establecer en la opción -e (o – -expiredate) el valor de EXPIRE_DATE en 1.
+-m, – -move-home : Mueve el contenido del directorio de inicio del usuario a la nueva ubicación. Esta opción solo es válida en combinación con la opción -d (o – -home).
+-o, – -non-unique : Cuando esta opción se usa conjuntamente con la opción -u, permite cambiar el identificador de usuario (UID) a un valor no único.
+-p, – -password PASSWORD : Establece una nueva contraseña de usuario. Hay que tener en cuenta que al pasar la contraseña como opción, esta irá en claro. Tenemos que asegurarnos de que la contraseña cumple con la política de contraseñas del sistema.
+-s, – -shell SHELL : Permite establecer una nueva shell de inicio de sesión del usuario. Dejando este campo en blanco hace que el sistema seleccione la shell de inicio de sesión predeterminada.
+-u, – -uid UID : Establece el nuevo valor numérico del identificador de usuario (UID). Este valor debe ser único, a menos que se utilice la opción -o. El valor no debe ser negativo. Los valores entre 0 y 999 se reservan normalmente para las cuentas de sistema. El buzón de correo del usuario y cualquier archivo que el usuario posea y que se encuentre en el directorio de inicio del usuario cambiará automáticamente al nuevo identificador de usuario (UID) del archivo. La propiedad de los archivos fuera del directorio de inicio del usuario se debe corregir manualmente.
+-U, – -unlock : Desbloquea la contraseña de un usuario. Esto elimina el ! delante de la contraseña cifrada en el archivo /etc/shadow. Esta poción no se puede usar con las opciones -p o -L.
+Nota: Si deseamos desbloquear la cuenta (no solo acceder con una contraseña), tendremos que establecer en la opción -e (o – -expiredate) el valor de EXPIRE_DATE en, por ejemplo 99999 o en el valor establecido con la variable EXPIRE en el archivo /etc/default/useradd.
+-Z, – -selinux-user SEUSER : Establece el usuario de SELinux para el inicio de sesión del usuario. El valor predeterminado es dejar este campo en blanco, lo que hace que el sistema seleccione el usuario SELinux predeterminado.
+
+* Renombrar usuarios (tener en cuenta los 2 puntos de abajo) -> usermod -l  NUEVO_USUARIO usuario
+	1- Cerrar sesión o matar procesos de usuario ->
+	2- Renombrar directorio y mover todo al nuevo, esto se hace en conjunto -> usermod -l USUARIO -d NUEVO_HOME -m NUEVO_USUARIO
+
+########################################################################################################
+
+
+#### USERADD #### -> Crear usuarios
+
+-c ‘COMENTARIO’: Permite añadir un comentario al usuario, como puede ser su nombre real.
+-d HOME_DIR: Esta opción nos permite cambiar el directorio por defecto del usuario, que suele ser /home/.
+-e FECHA: Permite seleccionar la fecha en la que se deshabilitará la cuenta. Debe introducirse siguiendo el formato AAAA-MM-DD.
+-f DÍAS: Nos permite seleccionar el número de días a partir de la fecha de expiración de la contraseña para deshabilitar la cuenta. Con un valor de -1, no se deshabilitará.
+-g GRUPO: Permite añadir al usuario a un grupo. El grupo debe existir con anterioridad para poder añadirlo. Podemos introducir el grupo por su nombre o por su identificador de grupo (GID).
+-G GRUPO1[,GRUPO2,…[,GRUPOn]]]: Similar a la opción anterior, pero permite introducir varios grupos separados por comas. Los grupos deben existir con anterioridad para poder añadirlo.
+-m: Crea el directorio personal (home) del usuario si no existe.
+-M: No crea el directorio de inicio (home) del usuario.
+-n: No crea un grupo privado para el usuario.
+-r: La cuenta se convierte en cuenta del sistema, con identificador de usuario (UID) menor a 500 y sin directorio personal.
+-p CONTRASEÑA: Establece una contraseña de usuario. Hay que tener en cuenta que al pasar la contraseña como opción, esta irá en claro. La contraseña se puede crear posteriormente con el comando passwd .
+-s SHELL: Permite modificar la shell de inicio de sesión del usuario, con useradd por defecto es /bin/sh y con adduser por defecto es /bin/bash.
+-u UID: Permite especificar el identificador de usuario (UID), que deberá ser mayor a 499 y único.
+-k SKEL_DIR: The skeleton directory (El directorio esqueleto) contiene archivos y directorios que se copiarán en el directorio de inicio del usuario cuando useradd crea el directorio de inicio. 
+						Esta opción solo es válida cuando se especifica la opción -m. Si la opción -k no está configurada, el directorio esqueleto está definido por la variable SKEL en el archivo /etc/default/useradd. 
+						Por defecto el directorio esqueleto se guarda en /etc/skel.
+  
+
+Crear usuario -> useradd USUARIO
+Añadir usuario a grupo -> useradd -G grupo1, grupo2... USUARIO
+
+########################################################################################################
+
+
+#### USERDEL #### -> Borrar usuarios
+
+
+-f, – -force : Esta opción fuerza la eliminación de la cuenta de usuario incluso si el usuario todavía está conectado. También obliga a userdel a eliminar el directorio de inicio del usuario y la cola de correo, 
+							incluso si otro usuario usa el mismo directorio de inicio o si la cola de correo no es propiedad del usuario especificado. Si USERGROUPS_ENAB se define como sí en /etc/login.defs y si existe un grupo con el mismo nombre que el usuario eliminado, 
+							este grupo se eliminará, incluso si sigue siendo el grupo principal de otro usuario.
+								Nota: Esta opción es peligrosa ya que puede dejar a nuestro sistema en un estado de inconsistencia.
+-h, – -help : Muestra unas instrucciones cortas.
+-r, – -remove : Los archivos del directorio de inicio del usuario se eliminarán junto con el directorio de inicio y la cola de correo del usuario. Los archivos ubicados en otros sistemas de archivos deberán buscarse y eliminarse manualmente. La cola de correo está definida por la variable MAIL_DIR en el archivo login.defs.
+-Z, – -selinux-user : Elimina al usuario de SELinux asignado al inicio de sesión del usuario de la asignación de inicio de sesión de SELinux.
+
+Borrar usuario -> userdel USUARIO
+
+  
+########################################################################################################         
+
+
+############# AÑADIR RUTAS RED CONEXION #############
+
+
+El comando NO es persistente, para que sea persistente hay que meterlas en el fichero /etc/sysconfig/network-scripts/route-INTERFAZ
+
+Ejemplo ->   cat /etc/sysconfig/network-scripts/route-eth0
+
+10.18.159.167 via 10.18.16.1 dev eth0
+10.18.159.154 via 10.18.16.1 dev eth0
+10.18.159.155 via 10.18.16.1 dev eth0
+10.18.159.156 via 10.18.16.1 dev eth0
+10.18.159.159 via 10.18.16.1 dev eth0
+
+ 
+madrids03_root_/root> route -n                     
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+10.18.159.176   10.18.16.1      255.255.255.255 UGH   0      0        0 eth0
+
+Se ha añadido así ->  route add -net 10.18.159.176 gw 10.18.16.1 netmask 255.255.255.255 dev eth0
+
+########################################################################################################
+
+*** SUSTITUIR ACENTOS ****
+
+- Meter en fichero .sed:
+
+s/\xc3\xa1/a/g
+s/\xc3\xa9/e/g
+s/\xc3\xad/i/g
+s/\xc3\xb3/o/g
+s/\xc3\xba/u/g
+s/\xc3\x81/A/g
+s/\xc3\x89/E/g
+s/\xc3\x8d/I/g
+s/\xc3\x93/O/g
+s/\xc3\x9a/U/g
+
+Ejecutar: sed -f fichero.sed fichero_a_quitar_acentos > fichero_salida_sin_acentos
+
+OPCION 2 que quita Ñ también-> cat fichero | iconv -f UTF-8 -t ASCII//TRANSLIT
+
+########################################################################################################
+
+ARGUMENTOS SCRIPTS:
+
+- $@ -> muestra todos los pasados
+- $# -> cuenta cuántos se han pasado
+- $? -> muestra el resultado de la ejecución del comando anterior
+
+MOSTRAR LISTADO DE ARGUMENTOS DE ENTRADA:
+
+for i in "$@"
+do
+echo ${i}
+done
+
+Usar variables con gawk -> red=$(gawk -v a="${serv}" '$1==a {print $2}' 'FS=;' master_maquinas.txt) -> usa la variable SERV como dato de entrada para buscar en primer campo y mostrar segundo campo del fichero
+
+IF en AWK
+
+$ awk -F";" '{
+if ($3 >=35 && $4 >= 35 && $5 >= 35)
+	print $0,"=>","Pass";
+else
+	print $0,"=>","Fail";
+}' student-marks
+
+EN UNA LINEA
+
+COMANDO | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' -> el = es doble ==
+
+########################################################################################################
+
+
+stat -c %Y -> muestra última modificación en segundos (timestamp)
+date -d  "2019-09-19 10:07:01" +%s -> transforma una fecha en segundos (timestamp)
+date -d @1568880187 -> transforma una fecha de segundos (timestamp) en fecha normal
+echo $(( ($(date -d 2010-06-01 +%s) - $(date -d 2010-05-15 +%s)) / 86400)) -> Muestra la diferencia entre 2 fechas
+
+
+########################################################################################################
+
+Terminal too wide -> stty columns 160 (usar sudo en algunas maquinas)
+
+sudo -u USUARIO comando -> para lanzar un comando con un usuario específico.
+
+*** FORZAR REINICIO EQUIPO -- proceso systemd impide reiniciarlo *** 
+
+echo 1 > /proc/sys/kernel/sysrq  --> activar sysrq
+
+echo b > /proc/sysrq-trigger --> realiza hard reboot
+
+Niveles arranque:
+
+Old Command						New Command																		Description
+
+runlevel	 						systemctl list-units --type target					Lists currently loaded target units.
+telinit runlevel			systemctl isolate name.target								Changes the current target.
+
+
+INIT:
+
+0 – System halt i.e the system can be safely powered off with no activity.
+1 – Single user mode.
+2 – Multiple user mode with no NFS(network file system).
+3 – Multiple user mode under the command line interface and not under the graphical user interface.
+4 – User-definable.
+5 – Multiple user mode under GUI (graphical user interface) and this is the standard runlevel for most of the LINUX based systems.
+6 – Reboot which is used to restart the system.
+
+SYSTEMD:
+
+Runlevel							Target Units															Description
+
+0							runlevel0.target, poweroff.target				Shut down and power off the system.
+1							runlevel1.target, rescue.target					Set up a rescue shell.
+2							runlevel2.target, multi-user.target			Set up a non-graphical multi-user system.
+3							runlevel3.target, multi-user.target			Set up a non-graphical multi-user system.
+4							runlevel4.target, multi-user.target			Set up a non-graphical multi-user system.
+5							runlevel5.target, graphical.target			Set up a graphical multi-user system.
+6							runlevel6.target, reboot.target					Shut down and reboot the system.
+
+
+########################################################################################################
+
+** sacar decimales de una cuenta -> echo $(( 100 * 1 / 3 )) | sed 's/..$/.&/'
+** hacer cuentas con decimales-> bc  <<< 'scale=2;8000/1800'
+*** AWK -> awk ' NR != 1' -> no muestra la primera línea 
+*** AWK -> awk '{ print $0, NR }' -> muestra el contenido de la línea y el número de línea
+*** AWK -> awk ' NR != 1 { print $0, NR }' -> los dos anteriores juntos
+*** AWK -> cat interfaz18.dat | awk -F'|' '{print $12}' | awk 'length > 255 { print "----->   " $0 "   ----->" , NR }' -> Cuenta los caracteres del campo 12 e indica en qué línea están
+*** AWK -> awk '{$1=$1};1' -> Quita los espacios al final y al inicio de un texto.
+*** grep -x -> busca cadenas exactas. Si la cadena tiene campos separados usamos gawk -> gawk -v a="${usuario}" '$1==a  {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt
+*** Dividir ficheros -> split -l num_lineas fichero fichero_salida -> split -l 2000 fichero.txt fichero 
+*** Sacar con sed un rango de lineas de un fichero -> sed -n '1,100p' fichero -> saca las 100 primeras lineas
+*** Sacar con sed lineas excepto las que indicamos -> sed '1,4d' fichero -> no muestra las 4 primeras líneas del fichero
+*** Pasar ficheros a máquinas Windows desde linux -> sshpass -p ${destinePassword} ${SCP} ${csvLocalFile} ${destineUser}@${remoteHost}:${csvRemotePath}
+*** nslookup -> para saber nombre de maquina por su IP
+*** fuser (root)-> para ver qué está usando ese fichero -> fuser -u fichero
+*** ver inodes -> df -i -> a veces aunque el FS está bien los inodos están al 100%, revisar ambos
+           -> find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn  ->  LOS QUE MAS OCUPAN
+*** Convertir ficheros UTF-8
+		$ iconv option
+    $ iconv options -f from-encoding -t to-encoding inputfile(s) -o outputfile -> iconv -f formato_inicial -t formato_final -o fichero_salida
+    file -i fichero -> ver formato
+    iconv -l -> ver tipo de conversiones
+
+*** Redirigir salida stdout -> comando  2>&1 -> con esto la salida ya es "tratable" para bien usar pipe o para redirigir a fichero
+*** Escanear puertos (root)
+		netstat -na | grep PUERTO -> mira si está en uso
+		lsof -i :PUERTO -> muestra quién está usando el puerto
+*** quitar case sensitive vi -> :set ic para volver a ponerlo :set noic
+*** ver caracteres raros o saltos de linea vi -> :set list
+*** sustituir usando perl -> perl -npi -e "s/texto1/texto2/g" FICHERO
+*** eliminar  usando perl -> perl -ni -e 'print unless /TEXTO_A_BORRAR/' FICHERO
+*** para poder usar variables dentro de perl -> poner " en vez de ' -> perl -npi -e "s/texto1/texto2/g" FICHERO en vez de perl -npi -e 's/texto1/texto2/g' FICHERO
+*** buscar tabuladores fichero -> cat -T fichero |grep "\^" 
+*** Si un script falla con [[ lanzarlo con -> bash script.sh
+*** xargs -> te coloca el resultado en una sola linea, por ejemplo -> ls  | xargs -> en vez de sacar en varias lineas lo saca en una y si lo combinas con tr sustituyes ese espacio, por ejemplo tr ' ' ';' sustituye por ;
+
+			bash-3.2# ls 
+			DORI-NEON-POST.flar  boot                 dev                  export               lib                  opt                  rpool                test                 var                  ~root
+			NFS                  cdroom               devices              home                 mnt                  platform             sbin                 tmp                  vol
+			bin                  conf                 etc                  kernel               net                  proc                 system               usr                  ~
+
+			bash-3.2# ls | xargs
+			DORI-NEON-POST.flar NFS bin boot cdroom conf dev devices etc export home kernel lib mnt net opt platform proc rpool sbin system test tmp usr var vol ~ ~root
+
+*** xargs -l1 COMANDO es lo mismo que xargs -I {} COMANDO {}
+*** FTP sin password ***
+/usr/bin/ftp -n -v $HOST << EOT
+ascii
+user $USER $PASSWD
+prompt
+cd GIRO_Soria
+put SourceSoria-Trend.txt
+bye
+EOT
+*** FTP sin password ***
+
+########################################################################################################
+
+###### RELACIONES CONFIANZA ######
+* Usuario equipo1 se va a conectar a equipo2 por SSH/FTP. 
+
+-- > En equipo1 generamos la RSA KEY y la pasamos al equipo2 (en equipo2 debe existir el usuario).
+
+
+---Generar clave RSA
+
+ssh-keygen -t rsa -b 4096 -f /home/temip/.ssh/id_rsa (o el nombre que se quiera). NO SE PONE NI PASS NI PHRASE
+
+---Añadir la nueva clave RSA al fichero de autorizados del equipo remoto
+
+cat /home/temip/.ssh/id_rsa.pub | ssh USUARIO@IP_EQUIPO2 'cat >> /home/temip/.ssh/authorized_keys'
+
+---Copiar la nueva clave RSA al equipo remoto (hace lo mismo que el punto anterior)
+ssh-copy-id -i /home/temip/.ssh/id_rsa.pub USUARIO@IP_EQUIPO2 -> copia la clave RSA al equipo remoto
+
+########################################################################################################
+
+############# While leyendo dos ficheros a la vez (o multipes ficheros)############# 
+while IFS= read -r line && read -r line2 <&3
+do
+echo "    <Tndl_Element>"
+echo "   <Entity>"
+echo "    <Name>$line</Name>"
+echo "     <Attributes>"
+echo "      <Attribute>"
+echo "       <Name>DISTINGUISHNAME</Name>"
+echo "       <Value>&quot;$line2&quot;</Value>"
+echo "      </Attribute>"
+echo "     </Attributes>"
+echo "   </Entity>"
+echo "  </Tndl_Element>"
+done < texto.txt 3< texto2.txt
+
+########################################################################################################
+
