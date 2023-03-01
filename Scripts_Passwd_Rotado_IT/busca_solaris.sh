@@ -1,4 +1,4 @@
-#/bin/bash -p
+#! /bin/bash -p
 
 export LANG=en_US.UTF-8
 
@@ -39,7 +39,7 @@ EOF
 
 ono ()
 {
-ssh ${serv} 'bash'<< EOF
+ssh "${serv}" 'bash'<< EOF
 $(typeset -f funcion)
 funcion ${serv} ${user}
 EOF
@@ -66,19 +66,19 @@ while IFS=';' read -r serv user <&3
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    id=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+    #identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
     
-    if [ ${red} == "VODAFONE" ]
+    if [ "${red}" == "VODAFONE" ]
         then
             vodafone
     fi
 
-    if [ ${red} == "TELE2" ]
+    if [ "${red}" == "TELE2" ]
         then
             tele2
     fi
 
-    if [ ${red} == "ONO" ]
+    if [ "${red}" == "ONO" ]
         then
             ono
     fi
