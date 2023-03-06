@@ -207,17 +207,18 @@ clear
 # Borramos fichero temporal
 rm -f /home/mdearri2/vodafone.sh
 
-sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Vodafone-IT" > rotado_password.csv
+##sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Vodafone-IT" > rotado_password.csv
+sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Pre-Production|Production" > rotado_password.csv
 perl -npi -e "s/Press ENTER to continue ...//g" rotado_password.csv
 
 # Ponemos tipo de usuario
 
-echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO" > temporal_script.tmp
-cat rotado_password.csv | awk ' NR != 1'| while read line
-do
-    usuario=$(echo "${line}" | awk -F";" '{print $4}')
-    tipo=$(gawk -v a="${usuario}" '$1==a {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt)
-    echo "${line};${tipo}" >> temporal_script.tmp
-done
+##echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO" > temporal_script.tmp
+##cat rotado_password.csv | awk ' NR != 1'| while read line
+##do
+##    usuario=$(echo "${line}" | awk -F";" '{print $4}')
+##    tipo=$(gawk -v a="${usuario}" '$1==a {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt)
+##    echo "${line};${tipo}" >> temporal_script.tmp
+##done
 
-mv temporal_script.tmp  rotado_password.csv
+##mv temporal_script.tmp  rotado_password.csv
