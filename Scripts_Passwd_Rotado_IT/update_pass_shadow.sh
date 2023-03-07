@@ -16,11 +16,13 @@ continua()
 
 funcion ()
 {
+
+
 export LANG=en_US.UTF-8
-days=$(echo $(( $(date +%s) / 86400 )))
+#days=$(echo $(( $(date +%s) / 86400 )))
 fecha=$(date +%Y%m%d%H%M%S)
-addm=$(gawk '$1=="addm" {print $1}' 'FS=:' /etc/shadow  | wc -l)
-addmusr=$(gawk '$1=="addmusr" {print $1}' 'FS=:' /etc/shadow |  wc -l)
+addm=$(awk -F: '{if($1 == "addm") {print $1}}' /etc/shadow | wc -l)
+addmusr=$(awk -F: '{if($1 == "addmusr") {print $1}}' /etc/shadow | wc -l)
 
 #if [ -f /etc/shadow ]
 #then
@@ -35,14 +37,14 @@ addmusr=$(gawk '$1=="addmusr" {print $1}' 'FS=:' /etc/shadow |  wc -l)
 
 # Realizamos comprobacion
 
-if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" = "${days}" ]
+if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" = "$3" ]
 then
 cambio="OK"
 else
 cambio="NOK"
 fi
 
-if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" = "${days}" ]
+if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" = "$3" ]
 then
 cambio1="OK"
 else
@@ -52,13 +54,13 @@ fi
 if [ ${addm} -gt 0 ]
     then
         comp1=$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)
-        echo "${1};addm;Vodafone-IT;${2};${comp1};${cambio1}"
+        echo "${1};addm;Vodafone-IT;${2};${comp1};${3};${cambio1}"
 fi
 
 if [ ${addmusr} -gt 0 ]
     then
         comp=$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)
-        echo "${1};addmusr;Vodafone-IT;${2};${comp};${cambio}"
+        echo "${1};addmusr;Vodafone-IT;${2};${comp};${3};${cambio}"
 fi
     
 
@@ -66,7 +68,6 @@ fi
 
 ##if [ "${sistema}" == "SunOS" ]
 ##then
-##
 ##if [ $(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow) -eq $days ]; then
 ##	passwd -x 91 -n 1 -w 7 addm
 ##else
@@ -162,8 +163,9 @@ continua
 ############################################################
 
 # Creamos cabecera CSV
-echo "SERVIDOR;USUARIO;ENTORNO;ID;FECHA;COMPROBACION"
+echo "SERVIDOR;USUARIO;ENTORNO;ID;FECHA_ACTUAL;FECHA_DEBERIA;COMPROBACION"
 
+days=$(echo $(( $(date +%s) / 86400 )))
 
 while IFS=';' read -r serv user <&3 
 do
@@ -174,11 +176,11 @@ do
    if [ "${red}" == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
+            echo "funcion \${1} \${2} \${3}" >> funcion_no_borrar.sh
             scp -p funcion_no_borrar.sh hmc:/tmp/.
             ssh hmc << EOF
             scp -p /tmp/funcion_no_borrar.sh ${serv}:/tmp/.
-            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${identificador}"
+            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${identificador}" "$days"
             ssh ${serv} 'rm -f /tmp/funcion_no_borrar.sh'
 EOF
             ssh hmc 'rm -f /tmp/funcion_no_borrar.sh'
@@ -188,16 +190,16 @@ EOF
     if [ "${red}" == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${identificador}" 
+            echo "funcion \${1} \${2} \${3}" >> funcion_no_borrar.sh
+            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${identificador}" "$days"
             rm -f funcion_no_borrar.sh
     fi
 
     if [ "${red}" == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${identificador}"
+            echo "funcion \${1} \${2} \${3}" >> funcion_no_borrar.sh
+            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${identificador}" "$days"
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
@@ -208,5 +210,5 @@ clear
 # Borramos fichero temporal
 rm -f /home/mdearri2/vodafone.sh
 
-sed $'s/[^[:print:]\t]//g' pass_shadow.log | grep -E "COMPROBACION|Pre-Production|Production" > pass_shadow.csv
+sed $'s/[^[:print:]\t]//g' pass_shadow.log | grep -E "COMPROBACION|Vodafone-IT" > pass_shadow.csv
 perl -npi -e "s/Press ENTER to continue ...//g" pass_shadow.csv
