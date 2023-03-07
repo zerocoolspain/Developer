@@ -1,4 +1,4 @@
-#/bin/bash -p
+#! /bin/bash -p
 
 export LANG=en_US.UTF-8
 
@@ -24,13 +24,13 @@ sistema=$(uname)
 
 if [ "${sistema}" == "SunOS" ]
     then
-        os=`head -1 /etc/release | xargs`
-        nousers=`/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/wc -l | /usr/bin/xargs`
-        users=`/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs`
-        cyber=`/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i cyberark|wc -l`
-        cyber2=`/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i cyberlog|wc -l`
-        carp=`/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i carp|wc -l`
-        css=`/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i css_mon|wc -l`
+        os=$(head -1 /etc/release | xargs)
+        nousers=$(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/wc -l | /usr/bin/xargs)
+        users=$(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs)
+        cyber=$(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i cyberark|wc -l)
+        cyber2=$(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i cyberlog|wc -l)
+        carp=$(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i carp|wc -l)
+        css=$(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs|grep -i css_mon|wc -l)
 
         existCcs="NO"
         if [ $css -gt 0 ]
@@ -53,16 +53,16 @@ if [ "${sistema}" == "SunOS" ]
         fi
 
         users=""
-        for u in `/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs | /usr/bin/head -1`
+        for u in $(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $11 != "91") { print $1}' | /usr/bin/sort | /usr/bin/xargs | /usr/bin/head -1)
             do
-                result=`/usr/bin/last -1 $u | /usr/bin/head -1`
+                result=$(/usr/bin/last -1 $u | /usr/bin/head -1)
                 if [ ! -z "$result" ]
                     then
-                        if [ `echo $result | grep console > /dev/null` ]
+                        if [ $(echo $result | grep console > /dev/null) ]
                             then
-                                lastDate=`echo "$result" | /usr/bin/awk -F' ' '{print $5"/"$4}'`
+                                lastDate=$(echo "$result" | /usr/bin/awk -F' ' '{print $5"/"$4}')
                             else
-                                lastDate=`echo "$result" | /usr/bin/awk -F' ' '{print $6"/"$5}'`
+                                lastDate=$(echo "$result" | /usr/bin/awk -F' ' '{print $6"/"$5}')
                         fi
                          else
                              lastDate="never"
@@ -70,9 +70,9 @@ if [ "${sistema}" == "SunOS" ]
                 users="$users $u|$lastDate"
             done
 
-        users=`echo $users | xargs`
-        linea="`cat /var/hostname`;$os;$nousers;$existCarp;$existCyberark;$existCyberlog;$existCcs;$users"
-        datos="`cat /var/hostname`;$os;$nousers;$existCarp;$existCyberark;$existCyberlog;$existCcs"
+        users=$(echo $users | xargs)
+        linea="$(cat /var/hostname);$os;$nousers;$existCarp;$existCyberark;$existCyberlog;$existCcs;$users"
+        datos="$(cat /var/hostname);$os;$nousers;$existCarp;$existCyberark;$existCyberlog;$existCcs"
 
         for i in  $(echo $linea | awk -F";" '{print $8}')
             do
@@ -105,7 +105,7 @@ if [ "${sistema}" == "SunOS" ]
                     hardenizado="NO"
                 fi
 
-                echo "${2};`cat /var/hostname`;Vodafone-IT;${i};${bloqueado};${rotado};${minD};${maxD};${warD};${hardenizado}" |  tr '|' ';'
+                echo "${2};$(cat /var/hostname);Vodafone-IT;${i};${bloqueado};${rotado};${minD};${maxD};${warD};${hardenizado}" |  tr '|' ';'
              done
         echo "A1HOJA;SERVIDOR;SISTEMA;USUARIOS;CARP*;CYBEARK;CYBERLOG;CCS_MON"
         echo "OTRA HOJA;${datos}"
@@ -119,10 +119,10 @@ if [ "${sistema}" == "Linux" ]
         nouser=$(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 | wc -l)
         users=$(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 | sort | xargs | head -1)
         now=$(date +%s)
-        cyber=$(grep -i cyberark /etc/shadow|wc -l)
-        cyber2=$(grep -i cyberlog /etc/shadow|wc -l)
-        carp=$(grep -i carp /etc/shadow|wc -l)
-        css=$(grep -i ccs_mon /etc/shadow|wc -l)
+        cyber=$(grep -ci cyberark /etc/shadow)
+        cyber2=$(grep -ci cyberlog /etc/shadow)
+        carp=$(grep -ci carp /etc/shadow)
+        css=$(grep -ci ccs_mon /etc/shadow)
 
         existCcs="NO"
         if [ $css -gt 0 ]
@@ -325,35 +325,35 @@ while IFS=';' read -r serv user <&3
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    id=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
-    
-    if [ ${red} == "VODAFONE" ]
+    identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+
+   if [ "${red}" == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
             scp -p funcion_no_borrar.sh hmc:/tmp/.
             ssh hmc << EOF
             scp -p /tmp/funcion_no_borrar.sh ${serv}:/tmp/.
-            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${id}"
+            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${identificador}"
             ssh ${serv} 'rm -f /tmp/funcion_no_borrar.sh'
 EOF
             ssh hmc 'rm -f /tmp/funcion_no_borrar.sh'
             rm -f funcion_no_borrar.sh
     fi 
 
-    if [ ${red} == "TELE2" ]
+    if [ "${red}" == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${id}"
+            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${identificador}"
             rm -f funcion_no_borrar.sh
     fi
 
-    if [ ${red} == "ONO" ]
+    if [ "${red}" == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${id}"
+            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${identificador}"
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
@@ -382,7 +382,7 @@ rm -f temp.kk
 cat ficheros/master_maquinas.txt | while read line
 do
 a=$(echo "${line}"| awk -F";" '{print $2}')
-b=$(grep -w "${a}"  escaneo_maquina_USUARIOS.csv| wc -l)
+b=$(grep -cw "${a}"  escaneo_maquina_USUARIOS.csv)
 c=$(echo "${line}"| awk -F";" '{print $1}')
 
 if [ ${b} -lt 1 ]
@@ -401,7 +401,7 @@ rm -f escaneo_maquina_USUARIOS.csv_TMP2
 cat ficheros/master_maquinas.txt | while read line
 do
 a=$(echo "${line}"| awk -F";" '{print $2}')
-b=$(grep -w "${a}"  escaneo_maquina_DATOS_MAQUINA.csv| wc -l)
+b=$(grep -cw "${a}"  escaneo_maquina_DATOS_MAQUINA.csv)
 c=$(echo "${line}"| awk -F";" '{print $1}')
 
 if [ ${b} -lt 1 ]

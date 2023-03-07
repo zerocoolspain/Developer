@@ -1,4 +1,4 @@
-#/bin/bash -p
+#! /bin/bash-p
 
 export LANG=en_US.UTF-8
 
@@ -45,7 +45,7 @@ EOF
 
 saca_parametros_ono ()
 {
-ssh ${serv} 'bash'<< EOF
+ssh "${serv}" 'bash'<< EOF
 $(typeset -f funcion)
 funcion ${serv}
 EOF

@@ -1,4 +1,4 @@
-#/bin/bash -p
+#! /bin/bash -p
 
 export LANG=en_US.UTF-8
 
@@ -24,17 +24,17 @@ sistema=$(uname)
 
 if [ "${sistema}" == "SunOS" ]
     then
-        os=`head -1 /etc/release | xargs`
+        os=$(head -1 /etc/release | xargs)
 
         #for u in $(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") {print $1}'| /usr/bin/sort)
         for u in $(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "NL") {print $1}'| /usr/bin/sort)    
             do
-                block=$(logins -oxl ${u} | awk -F: '{print $8}')
+                block=$(logins -oxl "${u}" | awk -F: '{print $8}')
                 #rotated=$(logins -oxl ${u} | awk -F: '{print $11}')
                 ##fecha=$(logins -oxl ${u} | awk -F: '{print $9}')
-                minD=$(logins -oxl ${u} | awk -F: '{print $10'}|sed 's/ //g')
-                maxD=$(logins -oxl ${u} | awk -F: '{print $11'}|sed 's/ //g')
-                warD=$(logins -oxl ${u} | awk -F: '{print $12'}|sed 's/ //g')
+                minD=$(logins -oxl "${u}" | awk -F: '{print $10'}|sed 's/ //g')
+                maxD=$(logins -oxl "${u}" | awk -F: '{print $11'}|sed 's/ //g')
+                warD=$(logins -oxl "${u}" | awk -F: '{print $12'}|sed 's/ //g')
 
                 if [ "${block}" = "LK" ]
                     then
@@ -72,12 +72,12 @@ if [ "${sistema}" == "Linux" ]
                 #for u in $(awk -F: '($2 != "*" && $2 != "!!" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort)
                 for u in $(awk -F: '($2 != "*" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort)
                     do
-                        block=$(cat /etc/shadow | grep ${u} | awk -F: '{print $2}')
+                        block=$(cat /etc/shadow | grep "${u}" | awk -F: '{print $2}')
                         #rotated=$(cat /etc/shadow | grep ${u} | awk -F: '{print $5}')
                         ##fecha=""
-                        minD=$(chage -l ${u} | grep -i "Minimum" |awk -F: '{print $2}'|sed 's/ //g')
-                        maxD=$(chage -l ${u} | grep -i "Maximum" |awk -F: '{print $2}'|sed 's/ //g')
-                        warD=$(chage -l ${u} | grep -i "Warning" |awk -F: '{print $2}'|sed 's/ //g')
+                        minD=$(chage -l "${u}" | grep -i "Minimum" |awk -F: '{print $2}'|sed 's/ //g')
+                        maxD=$(chage -l "${u}" | grep -i "Maximum" |awk -F: '{print $2}'|sed 's/ //g')
+                        warD=$(chage -l "${u}" | grep -i "Warning" |awk -F: '{print $2}'|sed 's/ //g')
                     
                         if [ "${block}" = "!!" ]
                             then
@@ -106,12 +106,12 @@ if [ "${sistema}" == "Linux" ]
                 #for u in $(awk -F: '($2 != "*" && $2 != "!!" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort | xargs -l1 passwd --status| awk '{print $1}')
                 for u in $(awk -F: '($2 != "*" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort | xargs -l1 passwd --status| awk '{print $1}')
                     do
-                        block=$(passwd --status ${u}| awk '{print $2}')
+                        block=$(passwd --status "${u}"| awk '{print $2}')
                         #rotated=$(passwd --status ${u}| awk '{print $5}')
                         ##fecha=$(passwd --status ${u}| awk '{print $3}')
-                        minD=$(chage -l ${u} | grep -Ei "Minimum|nimo" |awk -F: '{print $2}'|sed 's/ //g')
-                        maxD=$(chage -l ${u} | grep -Ei "Maximum|ximo" |awk -F: '{print $2}'|sed 's/ //g')
-                        warD=$(chage -l ${u} | grep -Ei "warning|aviso" |awk -F: '{print $2}'|sed 's/ //g')
+                        minD=$(chage -l "${u}" | grep -Ei "Minimum|nimo" |awk -F: '{print $2}'|sed 's/ //g')
+                        maxD=$(chage -l "${u}" | grep -Ei "Maximum|ximo" |awk -F: '{print $2}'|sed 's/ //g')
+                        warD=$(chage -l "${u}" | grep -Ei "warning|aviso" |awk -F: '{print $2}'|sed 's/ //g')
 
                         if [ "${block}" = "LK" ]
                             then
@@ -189,7 +189,7 @@ fi
 
 clear
 
-if [ -f $0.flag ]
+if [ -f "$0".flag ]
      then
         clear
         echo ""
@@ -198,7 +198,7 @@ if [ -f $0.flag ]
         continua
         exit 0
         else
-        touch  $0.flag 
+        touch  "$0".flag 
 fi
      trap 'rm -f $0.flag' EXIT
 
@@ -239,35 +239,35 @@ while IFS=';' read -r serv user <&3
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    id=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
-    
-    if [ ${red} == "VODAFONE" ]
+    identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+
+   if [ "${red}" == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
             scp -p funcion_no_borrar.sh hmc:/tmp/.
             ssh hmc << EOF
             scp -p /tmp/funcion_no_borrar.sh ${serv}:/tmp/.
-            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${id}"
+            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${identificador}"
             ssh ${serv} 'rm -f /tmp/funcion_no_borrar.sh'
 EOF
             ssh hmc 'rm -f /tmp/funcion_no_borrar.sh'
             rm -f funcion_no_borrar.sh
     fi 
 
-    if [ ${red} == "TELE2" ]
+    if [ "${red}" == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${id}"
+            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${identificador}" 
             rm -f funcion_no_borrar.sh
     fi
 
-    if [ ${red} == "ONO" ]
+    if [ "${red}" == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${id}"
+            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${identificador}"
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
@@ -289,7 +289,7 @@ perl -npi -e "s/Press ENTER to continue ...//g" saca_info_usuario.csv
 cat ficheros/master_maquinas.txt | while read line
 do
 a=$(echo "${line}"| awk -F";" '{print $2}')
-b=$(grep -w "${a}"  saca_info_usuario.csv| wc -l)
+b=$(grep -cw "${a}"  saca_info_usuario.csv)
 c=$(echo "${line}"| awk -F";" '{print $1}')
 
 if [ ${b} -lt 1 ]
@@ -300,5 +300,5 @@ done
 
 fecha=$(date +%d_%m_%Y)
 cat saca_info_usuario.csv_TMP2 >> saca_info_usuario.csv
-mv saca_info_usuario.csv escaneo_usuarios_${fecha}.csv
+mv saca_info_usuario.csv escaneo_usuarios_"${fecha}".csv
 rm -f saca_info_usuario.csv_TMP2 

@@ -1,4 +1,4 @@
-#/bin/bash -p
+#! /bin/bash -p
 
 export LANG=en_US.UTF-8
 
@@ -168,9 +168,9 @@ while IFS=';' read -r serv user <&3
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    id=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt) 
-    
-    if [ ${red} == "VODAFONE" ]
+    #identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+
+   if [ "${red}" == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -184,7 +184,7 @@ EOF
             rm -f funcion_no_borrar.sh
     fi 
 
-    if [ ${red} == "TELE2" ]
+    if [ "${red}" == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -192,7 +192,7 @@ EOF
             rm -f funcion_no_borrar.sh
     fi
 
-    if [ ${red} == "ONO" ]
+    if [ "${red}" == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -207,17 +207,18 @@ clear
 # Borramos fichero temporal
 rm -f /home/mdearri2/vodafone.sh
 
-sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Vodafone-IT" > rotado_password.csv
+##sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Vodafone-IT" > rotado_password.csv
+sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Pre-Production|Production" > rotado_password.csv
 perl -npi -e "s/Press ENTER to continue ...//g" rotado_password.csv
 
 # Ponemos tipo de usuario
 
-echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO" > temporal_script.tmp
-cat rotado_password.csv | awk ' NR != 1'| while read line
-do
-    usuario=$(echo "${line}" | awk -F";" '{print $4}')
-    tipo=$(gawk -v a="${usuario}" '$1==a {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt)
-    echo "${line};${tipo}" >> temporal_script.tmp
-done
+##echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO" > temporal_script.tmp
+##cat rotado_password.csv | awk ' NR != 1'| while read line
+##do
+##    usuario=$(echo "${line}" | awk -F";" '{print $4}')
+##    tipo=$(gawk -v a="${usuario}" '$1==a {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt)
+##    echo "${line};${tipo}" >> temporal_script.tmp
+##done
 
-mv temporal_script.tmp  rotado_password.csv
+##mv temporal_script.tmp  rotado_password.csv
