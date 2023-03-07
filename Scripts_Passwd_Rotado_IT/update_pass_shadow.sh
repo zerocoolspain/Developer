@@ -19,10 +19,11 @@ funcion ()
 
 
 export LANG=en_US.UTF-8
-#days=$(echo $(( $(date +%s) / 86400 )))
+days=$(echo $(( $(date +%s) / 86400 )))
 fecha=$(date +%Y%m%d%H%M%S)
-addm=$(awk -F: '{if($1 == "addm") {print $1}}' /etc/shadow | wc -l)
-addmusr=$(awk -F: '{if($1 == "addmusr") {print $1}}' /etc/shadow | wc -l)
+existeaddm=$(gawk '$1=="addm" {print $1}' 'FS=:' /etc/shadow | wc -l)
+existeaddmusr=$(gawk '$1=="addmusr" {print $1}' 'FS=:' /etc/shadow | wc -l)
+sistema=$(uname)
 
 #if [ -f /etc/shadow ]
 #then
@@ -32,78 +33,93 @@ addmusr=$(awk -F: '{if($1 == "addmusr") {print $1}}' /etc/shadow | wc -l)
 #cp /etc/shadow /etc/shadow.pds_$fecha
 #awk -v days="$(echo $(( $(date +%s) / 86400 )))" -F":" 'BEGIN {OFS=":"} { if($1 == "addm" || $1 == "addmusr") {$3=days;print} else {print} }' /etc/shadow > /etc/shadow.tmp
 #mv -f /etc/shadow.tmp /etc/shadow
+    
 
+if [ "${sistema}" == "SunOS" ]
+    then
+        if [ ${existeaddm} -gt 0 ]
+            then
+                if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" == "$days" ] 
+                    then
+	                    #passwd -x 91 -n 1 -w 7 addm
+                        echo "ADDM SE COMPARA"
+                    else
+	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
+                        echo "ADDM NO SE COMPARA"
+                fi
+        fi
+        
+        if [ ${existeaddmusr} -gt 0 ]
+            then
+                if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" == "$days" ]
+                    then
+	                    #passwd -x 91 -n 1 -w 7 addmusr
+                        echo "ADDMUSR SE COMPARA"
+                    else
+	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
+                        echo "ADDMUSR NO SE COMPARA"
+                fi
+        fi
+        #chmod 0000 /etc/shadow
+fi  
+
+
+if [ "${sistema}" == "Linux" ]
+    then
+        if [ ${existeaddm} -gt 0 ]
+            then
+                if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" == "$days" ]
+                    then
+	                    #chage -I 90 -W 7 -m 1 -M 90 addm
+                        echo "ADDM SE COMPARA"
+                    else
+	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
+                        echo "ADDM NO SE COMPARA"
+                fi
+        fi
+
+        if [ ${existeaddmusr} -gt 0 ]
+            then
+                if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" == "$days" ]
+                    then
+	                    #chage -I 90 -W 7 -m 1 -M 90 addmusr
+                        echo "ADDMUSR SE COMPARA"
+                    else
+	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
+                        echo "ADDMUSR NO SE COMPARA"
+                fi
+        fi
+        #chmod 0000 /etc/shadow
+fi
 
 
 # Realizamos comprobacion
 
-if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" = "$3" ]
-then
-cambio="OK"
-else
-cambio="NOK"
+if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" = "$days" ]
+    then
+        cambio="OK"
+    else
+        cambio="NOK"
 fi
 
-if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" = "$3" ]
-then
-cambio1="OK"
-else
-cambio1="NOK"
+if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" = "$days" ]
+    then
+        cambio1="OK"
+    else
+        cambio1="NOK"
 fi
 
-if [ ${addm} -gt 0 ]
+if [ ${existeaddm} -gt 0 ]
     then
         comp1=$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)
-        echo "${1};addm;Vodafone-IT;${2};${comp1};${3};${cambio1}"
+        echo "${1};addm;Vodafone-IT;${2};${comp1};${days};${cambio1}"
 fi
 
-if [ ${addmusr} -gt 0 ]
+if [ ${existeaddmusr} -gt 0 ]
     then
         comp=$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)
-        echo "${1};addmusr;Vodafone-IT;${2};${comp};${3};${cambio}"
+        echo "${1};addmusr;Vodafone-IT;${2};${comp};${days};${cambio}"
 fi
-    
-
-### lo dejamos para mas adelante
-
-##if [ "${sistema}" == "SunOS" ]
-##then
-##if [ $(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow) -eq $days ]; then
-##	passwd -x 91 -n 1 -w 7 addm
-##else
-##	#rollback
-##	cp -f /etc/shadow.pds_$fecha /etc/shadow
-##fi
-##
-##if [ $(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow) -eq $days ]; then
-##	passwd -x 91 -n 1 -w 7 addmusr
-##else
-##	#rollback
-##	cp -f /etc/shadow.pds_$fecha /etc/shadow
-##fi
-##
-##chmod 0000 /etc/shadow
-##fi
-##
-##if [ "${sistema}" == "Linux" ]
-##then
-##if [ $(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow) -eq $days ]; then
-##	chage -I 90 -W 7 -m 1 -M 90 addm
-##else
-##	#rollback
-##	cp -f /etc/shadow.pds_$fecha /etc/shadow
-##fi
-##
-##if [ $(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow) -eq $days ]; then
-##	chage -I 90 -W 7 -m 1 -M 90 addmusr
-##else
-##	#rollback
-##	cp -f /etc/shadow.pds_$fecha /etc/shadow
-##fi
-##
-##chmod 0000 /etc/shadow
-##fi
-
 
 }
 
