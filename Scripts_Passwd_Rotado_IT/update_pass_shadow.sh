@@ -16,8 +16,6 @@ continua()
 
 funcion ()
 {
-
-
 export LANG=en_US.UTF-8
 days=$(echo $(( $(date +%s) / 86400 )))
 fecha=$(date +%Y%m%d%H%M%S)
@@ -165,10 +163,10 @@ fi
 
  
     ==========================================================
-                    SACA INFO USUARIOS MAQUINA
+                    UPDATE PASS SHADOW
     ==========================================================
      
-     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y saca_info_usuario.txt 
+     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y pass_shadow.txt
            ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
            pass_shadow.txt -> Listado de maquinas
        
