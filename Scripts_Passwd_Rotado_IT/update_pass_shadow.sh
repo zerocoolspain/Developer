@@ -3,7 +3,7 @@
 export LANG=en_US.UTF-8
 
 # Borramos fichero temporal
-rm -f /home/mdearri2/vodafone.sh
+rm -f /home/mdearri2/funcion_no_borrar.sh
 
 #########################################
 #                Funciones              #
@@ -25,15 +25,21 @@ existeaddm=$(gawk '$1=="addm" {print $1}' 'FS=:' /etc/shadow | wc -l)
 existeaddmusr=$(gawk '$1=="addmusr" {print $1}' 'FS=:' /etc/shadow | wc -l)
 sistema=$(uname)
 
-#if [ -f /etc/shadow ]
-#then
-#cp -p /etc/shadow /etc/shadow.pds_original
-#fi
+## BACKUP DEL SHADOW
 
-#cp /etc/shadow /etc/shadow.pds_$fecha
-#awk -v days="$(echo $(( $(date +%s) / 86400 )))" -F":" 'BEGIN {OFS=":"} { if($1 == "addm" || $1 == "addmusr") {$3=days;print} else {print} }' /etc/shadow > /etc/shadow.tmp
-#mv -f /etc/shadow.tmp /etc/shadow
+if [ -f /etc/shadow ]
+    then
+        cp -p /etc/shadow /etc/shadow.pds_original
+fi
+
+cp /etc/shadow /etc/shadow.pds_$fecha
+
+## CAMBIAMOS CONTRASEÑA
+
+awk -v days="$(echo $(( $(date +%s) / 86400 )))" -F":" 'BEGIN {OFS=":"} { if($1 == "addm" || $1 == "addmusr") {$3=days;print} else {print} }' /etc/shadow > /etc/shadow.tmp
+mv -f /etc/shadow.tmp /etc/shadow
     
+## ROTADO DE CONTRASEÑA
 
 if [ "${sistema}" == "SunOS" ]
     then
@@ -41,11 +47,9 @@ if [ "${sistema}" == "SunOS" ]
             then
                 if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" == "$days" ] 
                     then
-	                    #passwd -x 91 -n 1 -w 7 addm
-                        echo "ADDM SE COMPARA"
+	                    passwd -x 91 -n 1 -w 7 addm
                     else
-	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
-                        echo "ADDM NO SE COMPARA"
+	                    cp -f /etc/shadow.pds_$fecha /etc/shadow
                 fi
         fi
         
@@ -53,14 +57,12 @@ if [ "${sistema}" == "SunOS" ]
             then
                 if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" == "$days" ]
                     then
-	                    #passwd -x 91 -n 1 -w 7 addmusr
-                        echo "ADDMUSR SE COMPARA"
+	                    passwd -x 91 -n 1 -w 7 addmusr
                     else
-	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
-                        echo "ADDMUSR NO SE COMPARA"
+	                    cp -f /etc/shadow.pds_$fecha /etc/shadow
                 fi
         fi
-        #chmod 0000 /etc/shadow
+        chmod 0000 /etc/shadow
 fi  
 
 
@@ -70,11 +72,9 @@ if [ "${sistema}" == "Linux" ]
             then
                 if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" == "$days" ]
                     then
-	                    #chage -I 90 -W 7 -m 1 -M 90 addm
-                        echo "ADDM SE COMPARA"
+	                    chage -I 90 -W 7 -m 1 -M 90 addm
                     else
-	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
-                        echo "ADDM NO SE COMPARA"
+	                    cp -f /etc/shadow.pds_$fecha /etc/shadow
                 fi
         fi
 
@@ -82,43 +82,43 @@ if [ "${sistema}" == "Linux" ]
             then
                 if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" == "$days" ]
                     then
-	                    #chage -I 90 -W 7 -m 1 -M 90 addmusr
-                        echo "ADDMUSR SE COMPARA"
+	                    chage -I 90 -W 7 -m 1 -M 90 addmusr
                     else
-	                    #cp -f /etc/shadow.pds_$fecha /etc/shadow
-                        echo "ADDMUSR NO SE COMPARA"
+	                    cp -f /etc/shadow.pds_$fecha /etc/shadow
                 fi
         fi
-        #chmod 0000 /etc/shadow
+        chmod 0000 /etc/shadow
 fi
 
 
 # Realizamos comprobacion
 
-if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" = "$days" ]
+if [ ${existeaddmusr} -gt 0 ]
     then
-        cambio="OK"
-    else
-        cambio="NOK"
-fi
-
-if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" = "$days" ]
-    then
-        cambio1="OK"
-    else
-        cambio1="NOK"
+        if [ "$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)" = "$days" ]
+            then
+                cambio1="OK"
+                comp1=$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)
+                echo "${1};addmusr;Vodafone-IT;${2};${comp1};${days};${cambio1}"
+            else
+                cambio1="NOK"
+                comp1=$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)
+                echo "${1};addmusr;Vodafone-IT;${2};${comp1};${days};${cambio1}"
+        fi
 fi
 
 if [ ${existeaddm} -gt 0 ]
     then
-        comp1=$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)
-        echo "${1};addm;Vodafone-IT;${2};${comp1};${days};${cambio1}"
-fi
-
-if [ ${existeaddmusr} -gt 0 ]
-    then
-        comp=$(awk -F: '{if($1 == "addmusr") {print $3}}' /etc/shadow)
-        echo "${1};addmusr;Vodafone-IT;${2};${comp};${days};${cambio}"
+        if [ "$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)" = "$days" ]
+            then
+                cambio="OK"
+                comp=$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)
+                echo "${1};addm;Vodafone-IT;${2};${comp};${days};${cambio}"
+            else
+                cambio="NOK"
+                comp=$(awk -F: '{if($1 == "addm") {print $3}}' /etc/shadow)
+                echo "${1};addm;Vodafone-IT;${2};${comp};${days};${cambio}"
+        fi
 fi
 
 }
@@ -224,7 +224,7 @@ continua
 clear
 
 # Borramos fichero temporal
-rm -f /home/mdearri2/vodafone.sh
+rm -f /home/mdearri2/funcion_no_borrar.sh
 
 sed $'s/[^[:print:]\t]//g' pass_shadow.log | grep -E "COMPROBACION|Vodafone-IT" > pass_shadow.csv
 perl -npi -e "s/Press ENTER to continue ...//g" pass_shadow.csv
