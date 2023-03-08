@@ -197,7 +197,7 @@ EOF
 
     # Sacamos LOG para actualizar CSV de EJECUTADOS
 
-    FECHA=$(date +%d_%m_%y)
+    FECHA=$(date +%d/%m/%y)
     echo "${FECHA};${identificador};${serv};${user};${aplicacion};${entorno};BLOQUEAR" >> para_CSV_de_ejecutados.csv
  } 3<&-
 done 3< block_users.txt

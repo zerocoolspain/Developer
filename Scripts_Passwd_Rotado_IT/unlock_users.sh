@@ -191,8 +191,8 @@ EOF
 
     # Sacamos LOG para actualizar CSV de EJECUTADOS
 
-    FECHA=$(date +%d_%m_%y)
-    echo "${FECHA};${identificador};${serv};${user};${aplicacion};${entorno};BLOQUEAR" >> para_CSV_de_ejecutados.csv
+    FECHA=$(date +%d/%m/%y)
+    echo "${FECHA};${identificador};${serv};${user};${aplicacion};${entorno};DESBLOQUEAR" >> para_CSV_de_ejecutados.csv
  } 3<&-
 done 3< unlock_users.txt
 continua
