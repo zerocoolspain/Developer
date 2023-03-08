@@ -53,9 +53,9 @@ do
 #                                                     #
 #               Menu Hardenizacion                    #
 #                                                     #
-#              Fecha -> 06/02/2023                    #
+#              Fecha -> 08/03/2023                    #
 #                                                     #
-#     v1.4  -- Miguel Angel de Arriba Gutierrez       #
+#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
 #                                                     #
 #######################################################
 

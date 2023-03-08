@@ -14,3 +14,4 @@ do
     echo "${fecha};${id};${serv};${usuario};${aplicativo};${entorno}" >> obelix
 
 done
+
