@@ -154,7 +154,7 @@ continua
 
 # Creamos cabecera CSV
 echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO"
-rm para_CSV_de_ejecutados.csv
+rm -f para_CSV_de_ejecutados.csv
 
 while IFS=';' read -r serv user <&3 
 do
