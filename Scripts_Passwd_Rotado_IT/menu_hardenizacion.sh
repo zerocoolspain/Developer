@@ -74,6 +74,7 @@ NOTAS:
         - Para la opcion 11 ademas -> normalizado_todos_usuarios_solaris.txt -> Listado de maquinas a tratar
         - Para la opcion 12 ademas -> saca_info_usuario.txt -> Listado de maquinas a tratar
         - Para la opcion 13 ademas -> escaneo_maquina.txt -> Listado de maquinas a tratar
+        - Para la opcion 14 ademas -> pass_shadow.txt -> Listado de maquinas a tratar
 
 =========================================
                MAIN MENU
@@ -93,6 +94,7 @@ NOTAS:
 11.  NORMALIZADO DE PARAMETROS Y USUARIOS EN MAQUINAS SOLARIS. OJO!! ESTO TRATA TODOS LOS USUARIOS DE LAS MAQUINAS
 12.  SACAR INFORMACION USUARIOS MAQUINAS (BLOQUEADO, ROTADO, HARDENIZADO OK/NOK)
 13.  ESCANEO MAQUINAS (USUARIOS, CYBERLOG, CYBEARK, CARP*, CCS_MON, BLOQUEO, ROTADO, HARDENIZADO OK/NOK)
+14.  MODIFICACION SHADOW USUARIO ADDM/ADDMUSER
 
 q.  Salir
 
@@ -115,6 +117,7 @@ EOF
  11) ${RUTA}/normalizado_todos_usuarios_solaris.sh | tee normalizado_todos_usuarios_solaris.log;;
  12) ${RUTA}/saca_info_usuarios.sh | tee saca_info_usuario.log;;
  13) ${RUTA}/escaneo_maquinas.sh | tee escaneo_maquina.log;;
+ 14) ${RUTA}/update_pass_shadow.sh | tee pass_shadow.log;;
 
    q)  rm -f $0.flag;echo; echo; exit 0;;
 

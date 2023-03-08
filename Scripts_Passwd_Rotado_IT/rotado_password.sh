@@ -56,14 +56,14 @@ fi
 
 if [ "${sistema}" == "SunOS" ]
     then
-        comp=$(logins -oxl ${2} | awk -F: '{print $8,$9,$10,$11,$12}')
-        echo "${FECHA};${1};Vodafone-IT;${2};${ok};${comp};${sistema}"
+        #comp=$(logins -oxl ${2} | awk -F: '{print $8,$9,$10,$11,$12}')
+        echo "${FECHA};${3};${1};${2};${4};${5};Vodafone-IT"
 fi
 
 if [ "${sistema}" == "Linux" ]
     then
-        comp=$(chage -l ${2} | grep -Ei "Maximum|ximo")
-        echo "${FECHA};${1};Vodafone-IT;${2};${ok};${comp};${sistema}"
+        #comp=$(chage -l ${2} | grep -Ei "Maximum|ximo" | grep -Ei "change|cambio")
+        echo "${FECHA};${3};${1};${2};${4};${5};;Vodafone-IT"
 fi
 
 }
@@ -168,16 +168,18 @@ while IFS=';' read -r serv user <&3
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    #identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+    identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+    aplicacion=$(gawk -v a="${serv}" '$2==a {print $5}' 'FS=;' ficheros/master_maquinas.txt)
+    entorno=$(gawk -v a="${serv}" '$2==a {print $4}' 'FS=;' ficheros/master_maquinas.txt)
 
    if [ "${red}" == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
+            echo "funcion \${1} \${2} \${3} \${4}" >> funcion_no_borrar.sh
             scp -p funcion_no_borrar.sh hmc:/tmp/.
             ssh hmc << EOF
             scp -p /tmp/funcion_no_borrar.sh ${serv}:/tmp/.
-            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${user}"
+            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${user}" "${identificador}" "${aplicacion}" "${entorno}"
             ssh ${serv} 'rm -f /tmp/funcion_no_borrar.sh'
 EOF
             ssh hmc 'rm -f /tmp/funcion_no_borrar.sh'
@@ -187,16 +189,16 @@ EOF
     if [ "${red}" == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${user}"
+            echo "funcion \${1} \${2} \${3} \${4}" >> funcion_no_borrar.sh
+            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${user}" "${identificador}" "${aplicacion}" "${entorno}"
             rm -f funcion_no_borrar.sh
     fi
 
     if [ "${red}" == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${user}"
+            echo "funcion \${1} \${2} \${3} \${4}" >> funcion_no_borrar.sh
+            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${user}" "${identificador}" "${aplicacion}" "${entorno}"
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
