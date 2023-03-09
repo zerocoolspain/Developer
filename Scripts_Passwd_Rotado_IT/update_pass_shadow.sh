@@ -226,6 +226,15 @@ fi
   printf "\f"
   cat <<EOF
 
+#######################################################
+#                                                     #
+#               Menu Hardenizacion                    #
+#                                                     #
+#              Fecha -> 08/03/2023                    #
+#                                                     #
+#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
+#                                                     #
+#######################################################
  
     ==========================================================
             MODIFICACION SHADOW USUARIO ADDM/ADDMUSER
