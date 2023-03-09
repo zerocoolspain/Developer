@@ -17,7 +17,7 @@ continua()
 funcion ()
 {
 export LANG=en_US.UTF-8
-days=$(echo $(( $(date +%s) / 86400 )))
+days="${4}"
 fecha=$(date +%Y%m%d)
 fecha2=$(date +%Y%m%d%H%M%S)
 sistema=$(uname)
@@ -31,113 +31,49 @@ fi
 
 cp /etc/shadow /etc/shadow.pds_$fecha
 cp /etc/shadow /etc/shadow.pds_$fecha2
-rm -f /etc/shadow.tmp.pds
 
-## CAMBIAMOS FECHA CONTRASEÑA
 
 if [ "${sistema}" = "SunOS" ]
     then
-        rm -f /tmp/listado_usuarios_tocar.txt
-        for u in $(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") {print $1}'| /usr/bin/sort)
-            do
-                encuentra=$(grep -cx ${u} /tmp/excepciones.txt)
-                if [ ${encuentra} -eq 0 ]
-                    then
-                        echo "${u}" >> /tmp/listado_usuarios_tocar.txt
-                fi
-            done
-        sort -u /tmp/listado_usuarios_tocar.txt > /tmp/listado_usuarios_tocar.txt.MIG
-        mv /tmp/listado_usuarios_tocar.txt.MIG /tmp/listado_usuarios_tocar.txt
-        cat /tmp/listado_usuarios_tocar.txt | while read line
-            do
-                buscaren=$(awk -v user="${line}" -F":" 'BEGIN {OFS=":"} { if($1 == user) {print NR} }' /etc/shadow)
-                days=$(echo $(( $(date +%s) / 86400 )))
-                campotocar=$(awk -v user="${line}" -F":" 'BEGIN {OFS=":"} { if($1 == user) {print $3} }' /etc/shadow)
-                sed -i "${buscaren}s/${campotocar}/${days}/g" /etc/shadow
-            done
-        chmod 0000 /etc/shadow
-fi
+        ## CAMBIAMOS FECHA CONTRASEÑA
 
-if [ "${sistema}" = "Linux" ]
-    then
-        rm -f /tmp/listado_usuarios_tocar.txt
-        for u in $(awk -F: '($2 != "*" && $2 != "!!" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort)
-            do
-                encuentra=$(grep -cx ${u} /tmp/excepciones.txt)
-                if [ ${encuentra} -eq 0 ]
-                    then
-                        echo "${u}" >> /tmp/listado_usuarios_tocar.txt
-                fi
-            done
-        
-        sort -u /tmp/listado_usuarios_tocar.txt > /tmp/listado_usuarios_tocar.txt.MIG
-        mv /tmp/listado_usuarios_tocar.txt.MIG /tmp/listado_usuarios_tocar.txt
-        
-        cat /tmp/listado_usuarios_tocar.txt | while read line
-            do
-                buscaren=$(awk -v user="${line}" -F":" 'BEGIN {OFS=":"} { if($1 == user) {print NR} }' /etc/shadow)
-                days=$(echo $(( $(date +%s) / 86400 )))
-                campotocar=$(awk -v user="${line}" -F":" 'BEGIN {OFS=":"} { if($1 == user) {print $3} }' /etc/shadow)
-                sed -i "${buscaren}s/${campotocar}/${days}/g" /etc/shadow
-            done
+        buscaren=$(nawk -v user="${3}" '$1==user {print NR}' 'FS=:' /etc/shadow)
+        #days=$(echo $(( $(date +%s) / 86400 )))
+        campotocar=$(nawk -v user="${3}" '$1==user {print $3}' 'FS=:' /etc/shadow)
+        #sed -i "${buscaren}s/${campotocar}/${days}/g" /etc/shadow
+        perl -p -i  -e "s/${campotocar}/${days}/ if $. == ${buscaren}" /etc/shadow
         chmod 0000 /etc/shadow
-fi
-    
-## ROTADO DE CONTRASEÑA
 
-if [ "${sistema}" = "SunOS" ]
-    then
-        for u in $(/usr/bin/logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") {print $1}'| /usr/bin/sort)
-            do
-                encuentra=$(grep -cx ${u} /tmp/excepciones.txt)
-                if [ ${encuentra} -eq 0 ]
-                    then
-                        echo "${u}" >> /tmp/listado_usuarios_tocar.txt
-                fi
-            done
-        
-        sort -u /tmp/listado_usuarios_tocar.txt > /tmp/listado_usuarios_tocar.txt.MIG
-        mv /tmp/listado_usuarios_tocar.txt.MIG /tmp/listado_usuarios_tocar.txt
-        
-        cat /tmp/listado_usuarios_tocar.txt | while read line
-            do
-                if [ "$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)" = "$days" ] 
-                    then
-                        useradd pepePDS
-                        userdel pepePDS
-	                    passwd -x 91 -n 1 -w 7 "${line}"
-                    else
-	                    cp -f /etc/shadow.pds_$fecha /etc/shadow
-                fi
-            done
+        ## ROTADO DE CONTRASEÑA
+
+        if [ "$(nawk -v user="${3}" '$1==user {print $3}' 'FS=:' /etc/shadow)" = "$days" ] 
+            then
+                useradd pepePDS
+                userdel pepePDS
+	            passwd -x 91 -n 1 -w 7 "${3}"
+        fi
 fi  
 
 
+
 if [ "${sistema}" = "Linux" ]
     then
-        for u in $(awk -F: '($2 != "*" && $2 != "!!" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort)
-            do
-                encuentra=$(grep -cx ${u} /tmp/excepciones.txt)
-                if [ ${encuentra} -eq 0 ]
-                    then
-                        echo "${u}" >> /tmp/listado_usuarios_tocar.txt
-                fi
-            done
-        
-        sort -u /tmp/listado_usuarios_tocar.txt > /tmp/listado_usuarios_tocar.txt.MIG
-        mv /tmp/listado_usuarios_tocar.txt.MIG /tmp/listado_usuarios_tocar.txt
-        
-        cat /tmp/listado_usuarios_tocar.txt | while read line
-            do
-                if [ "$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)" = "$days" ] 
-                    then
-                        useradd pepePDS
-                        userdel pepePDS
-	                    chage -I 90 -W 7 -m 1 -M 90 "${line}"
-                    else
-	                    cp -f /etc/shadow.pds_$fecha /etc/shadow
-                fi
-            done
+        ## CAMBIAMOS FECHA CONTRASEÑA
+
+        buscaren=$(awk -v user="${3}" -F":" 'BEGIN {OFS=":"} { if($1 == user) {print NR} }' /etc/shadow)
+        #days=$(echo $(( $(date +%s) / 86400 )))
+        campotocar=$(awk -v user="${3}" -F":" 'BEGIN {OFS=":"} { if($1 == user) {print $3} }' /etc/shadow)
+        sed -i "${buscaren}s/${campotocar}/${days}/g" /etc/shadow
+        chmod 0000 /etc/shadow
+
+        ## ROTADO DE CONTRASEÑA
+
+        if [ "$(awk -v user="${3}" -F: '{if($1 == user) {print $3}}' /etc/shadow)" = "$days" ] 
+            then
+                useradd pepePDS
+                userdel pepePDS
+	            chage -I 90 -W 7 -m 1 -M 90 "${3}"
+    fi
 fi  
 
 
@@ -145,44 +81,42 @@ fi
 
 if [ "${sistema}" = "SunOS" ]
     then
-        days=$(echo $(( $(date +%s) / 86400 )))
-        cat /tmp/listado_usuarios_tocar.txt | while read line
-            do
-                if [ "$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)" = "$days" ] 
-                    then
-                        cambio="OK"
-                        comp=$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)
-                        minD=$(logins -oxl "${line}" | awk -F: '{print $10'}|sed 's/ //g')
-                        maxD=$(logins -oxl "${line}" | awk -F: '{print $11'}|sed 's/ //g')
-                        warD=$(logins -oxl "${line}" | awk -F: '{print $12'}|sed 's/ //g')
-                        echo "${1};${line};Vodafone-IT;${2};${comp};${days};${cambio};${maxD};${minD};${warD}"
-                    else
-                        cambio="NOK"
-                        comp=$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)
-                        echo "${1};${line};Vodafone-IT;${2};${comp};${days};${cambio};N/A;N/A;N/A"
-                fi
-            done
+        #days=$(echo $(( $(date +%s) / 86400 )))
+        if [ "$(nawk -v user="${3}" '$1==user {print $3}' 'FS=:' /etc/shadow)" = "$days" ] 
+            then
+                cambio="OK"
+                comp=$(nawk -v user="${3}" '$1==user {print $3}' 'FS=:' /etc/shadow)
+                minD=$(logins -oxl "${3}" | awk -F: '{print $10'}|sed 's/ //g')
+                maxD=$(logins -oxl "${3}" | awk -F: '{print $11'}|sed 's/ //g')
+                warD=$(logins -oxl "${3}" | awk -F: '{print $12'}|sed 's/ //g')
+                echo "${1};${3};Vodafone-IT;${2};${comp};${days};${cambio};${maxD};${minD};${warD}"
+            else
+                cambio="NOK"
+                minD=$(logins -oxl "${3}" | awk -F: '{print $10'}|sed 's/ //g')
+                maxD=$(logins -oxl "${3}" | awk -F: '{print $11'}|sed 's/ //g')
+                warD=$(logins -oxl "${3}" | awk -F: '{print $12'}|sed 's/ //g')
+                echo "${1};${3};Vodafone-IT;${2};${comp};${days};${cambio};${maxD};${minD};${warD}"
+        fi
 fi
 
 if [ "${sistema}" = "Linux" ]
     then
-        days=$(echo $(( $(date +%s) / 86400 )))
-        cat /tmp/listado_usuarios_tocar.txt | while read line
-            do
-                if [ "$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)" = "$days" ] 
-                    then
-                        cambio="OK"
-                        comp=$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)
-                        minD=$(chage -l "${line}" | grep -Ei "Minimum|nimo" |awk -F: '{print $2}'|sed 's/ //g')
-                        maxD=$(chage -l "${line}" | grep -Ei "Maximum|ximo" |awk -F: '{print $2}'|sed 's/ //g')
-                        warD=$(chage -l "${line}" | grep -Ei "warning|aviso" |awk -F: '{print $2}'|sed 's/ //g')
-                        echo "${1};${line};Vodafone-IT;${2};${comp};${days};${cambio};${maxD};${minD};${warD}"
-                    else
-                        cambio="NOK"
-                        comp=$(awk -v user="${line}" -F: '{if($1 == user) {print $3}}' /etc/shadow)
-                        echo "${1};${line};Vodafone-IT;${2};${comp};${days};${cambio};N/A;N/A;N/A"
-                fi
-            done
+        #days=$(echo $(( $(date +%s) / 86400 )))
+        if [ "$(awk -v user="${3}" -F: '{if($1 == user) {print $3}}' /etc/shadow)" = "$days" ] 
+            then
+                cambio="OK"
+                comp=$(awk -v user="${3}" -F: '{if($1 == user) {print $3}}' /etc/shadow)
+                minD=$(chage -l "${3}" | grep -Ei "Minimum|nimo" |awk -F: '{print $2}'|sed 's/ //g')
+                maxD=$(chage -l "${3}" | grep -Ei "Maximum|ximo" |awk -F: '{print $2}'|sed 's/ //g')
+                warD=$(chage -l "${3}" | grep -Ei "warning|aviso" |awk -F: '{print $2}'|sed 's/ //g')
+                echo "${1};${3};Vodafone-IT;${2};${comp};${days};${cambio};${maxD};${minD};${warD}"
+            else
+                cambio="NOK"
+                minD=$(chage -l "${3}" | grep -Ei "Minimum|nimo" |awk -F: '{print $2}'|sed 's/ //g')
+                maxD=$(chage -l "${3}" | grep -Ei "Maximum|ximo" |awk -F: '{print $2}'|sed 's/ //g')
+                warD=$(chage -l "${3}" | grep -Ei "warning|aviso" |awk -F: '{print $2}'|sed 's/ //g')
+                echo "${1};${3};Vodafone-IT;${2};${comp};${days};${cambio};${maxD};${minD};${warD}"
+        fi
 fi
 
 }
@@ -191,7 +125,6 @@ fi
 
 f_master="ficheros/master_maquinas.txt"
 f_uso="workaround_shadow.txt"
-f_exc="excepciones.txt"
 
 if [ ! -f ${f_master} ]
     then
@@ -204,14 +137,6 @@ fi
 if [ ! -f ${f_uso} ]
     then
         echo "No existe el fichero ${f_uso}"
-        continua
-        clear
-        exit 0
-fi
-
-if [ ! -f ${f_exc} ]
-    then
-        echo "No existe el fichero ${f_master}"
         continua
         clear
         exit 0
@@ -251,8 +176,7 @@ fi
      
      NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y pass_shadow.txt
            ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
-           workaround_shadow.txt -> Listado de maquinas
-           excepciones.txt -> listado de usuarios que NO se deben tocar
+           workaround_shadow.txt -> Listado de maquinas y usuarios con formato: MAQUINA;USUARIO
        
 EOF
 
@@ -263,6 +187,8 @@ continua
 # Creamos cabecera CSV
 echo "SERVIDOR;USUARIO;ENTORNO;ID;FECHA_ACTUAL;FECHA_DEBERIA;COMPROBACION_FECHA;MAX_DAYS;MIN_DAYS;WAR_DAYS"
 
+days=$(echo $(( $(date +%s) / 86400 ))) # Calculamos los dias desde 1970
+
 while IFS=';' read -r serv user <&3 
 do
  {
@@ -272,13 +198,11 @@ do
    if [ "${red}" == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
+            echo "funcion \${1} \${2} \${3} \${4}" >> funcion_no_borrar.sh
             scp -p funcion_no_borrar.sh hmc:/tmp/.
-            scp -p excepciones.txt hmc:/tmp/.
             ssh hmc << EOF
             scp -p /tmp/funcion_no_borrar.sh ${serv}:/tmp/.
-            scp -p /tmp/excepciones.txt ${serv}:/tmp/.
-            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${identificador}"
+            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${identificador}" "${user}" "${days}"
             ssh ${serv} 'rm -f /tmp/funcion_no_borrar.sh'
 EOF
             ssh hmc 'rm -f /tmp/funcion_no_borrar.sh'
@@ -288,18 +212,16 @@ EOF
     if [ "${red}" == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            scp -p excepciones.txt admunix:/tmp/.
-            ssh hmc 'ssh admunix 'scp -p /tmp/excepciones.txt {serv}:/tmp/. ; ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${identificador}"
+            echo "funcion \${1} \${2} \${3} \${4}" >> funcion_no_borrar.sh
+            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${identificador}" "${user}" "${days}"
             rm -f funcion_no_borrar.sh
     fi
 
     if [ "${red}" == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
-            echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            scp -p excepciones.txt ${serv}:/tmp/.
-            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${identificador}"
+            echo "funcion \${1} \${2} \${3} \${4}" >> funcion_no_borrar.sh
+            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${identificador}" "${user}" "${days}"
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
