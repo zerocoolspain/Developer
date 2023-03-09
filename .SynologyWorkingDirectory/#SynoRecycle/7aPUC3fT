@@ -17,69 +17,88 @@ continua()
 funcion ()
 {
 export LANG=en_US.UTF-8
+FECHA=$(date +%d_%m_%y)
+
+echo "Tratamos servidor ${1} y usuario ${2}" 
 
 sistema=$(uname)
 
 if [ "${sistema}" == "SunOS" ]
     then
-        echo "El sistema de ${1} es Solaris"
-        
-        echo "Paramos servicio FTP de ${1}"
-        svcadm disable -t ftp
-        echo "${1};Vodafone-IT;${sistema};Parada servicio"
+        passwd -x 91 -n 1 -w 7 ${2}
+        if [ $? -eq 0 ]
+            then 
+                echo " Rotado password usuario ${2} en servidor ${1} -> OK"
+                ok="Y"
+            else
+                echo " Rotado password usuario ${2} en servidor ${1} -> NOK con error ${$?}"
+                ok="N"
+        fi
+           
 fi
 
 if [ "${sistema}" == "Linux" ]
     then
-        echo "El sistema de ${1} es Linux"
-        
-        # Comprobamos el servicio
-        servicio=$(rpm -q  vsftpd | grep -i installed | wc -l)
-        
-        if [ ${servicio} -eq 1 ]
-            then
-                echo "Desinstalamos servicio FTP de ${1}"
-                rpm -e vsftpd
-                echo "${1};Vodafone-IT;${sistema};Desinstalacion servicio"
+        chage -I 90 -W 7 -m 1 -M 90 ${2}
+        if [ $? -eq 0 ]
+            then 
+                echo " Rotado password usuario ${2} en servidor ${1} -> OK"
+                ok="Y"
             else
-                echo "Servicio FTP no instalado en ${1}"
+                echo " Rotado password usuario ${2} en servidor ${1} -> NOK con error ${$?}"
+                ok="N"
         fi
+              
+fi 
 
+
+# Realizamos comprobacion
+
+if [ "${sistema}" == "SunOS" ]
+    then
+        comp=$(logins -oxl ${2} | awk -F: '{print $8,$9,$10,$11,$12}')
+        echo "${FECHA};${1};Vodafone-IT;${2};${ok};${comp};${sistema}"
+fi
+
+if [ "${sistema}" == "Linux" ]
+    then
+        comp=$(chage -l ${2} | grep -Ei "Maximum|ximo")
+        echo "${FECHA};${1};Vodafone-IT;${2};${ok};${comp};${sistema}"
 fi
 
 }
 
 ## FUNCIONES EN DESUSO AL EJECUTAR TODO EN BUCLE INICIAL
-stop_ftp_tele2 ()
+rotado_password_tele2 ()
 {
 ssh ADMUNIX << EOF 
 ssh ${serv}  'bash' 
 $(typeset -f funcion)
-funcion ${serv}
+funcion ${serv} ${user}
 EOF
 }
 
-stop_ftp_vodafone ()
+rotado_password_vodafone ()
 {
 ssh hmc << EOF
 ssh ${serv} 'bash'
 $(typeset -f funcion)
-funcion ${serv}
+funcion ${serv} ${user}
 EOF
 }
 
-stop_ftp_ono ()
+rotado_password_ono ()
 {
 ssh ${serv} 'bash'<< EOF
 $(typeset -f funcion)
-funcion ${serv}
+funcion ${serv} ${user}
 EOF
 }
 
 #################### FUNCION MAIN ####################
 
 f_master="ficheros/master_maquinas.txt"
-f_uso="servidores_ftp.txt"
+f_uso="rotado_password.txt"
 
 if [ ! -f ${f_master} ]
     then
@@ -120,20 +139,20 @@ fi
 #                                                     #
 #               Menu Hardenizacion                    #
 #                                                     #
-#              Fecha -> 08/03/2023                    #
+#              Fecha -> 06/02/2023                    #
 #                                                     #
-#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
+#     v1.4  -- Miguel Angel de Arriba Gutierrez       #
 #                                                     #
 #######################################################
 
  
     ==========================================================
-                       HARDENIZACION FTP
+                      ROTADO PASSWORD
     ==========================================================
      
-     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y servidores_ftp.txt 
+     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y block_users.txt 
            ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
-           servidores_ftp.txt  -> Listado de maquinas a tratar
+           rotado_password.txt -> Listado de maquinas y usuarios a tratar con formato: MAQUINA;USUARIO
        
 EOF
 
@@ -141,10 +160,10 @@ continua
 ############################################################
 ############################################################
 
-
 # Creamos cabecera CSV
+echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO"
 
-echo "SERVIDOR;ENTORNO;SISTEMA;ACCION"
+
 while IFS=';' read -r serv user <&3 
 do
  {
@@ -158,7 +177,7 @@ do
             scp -p funcion_no_borrar.sh hmc:/tmp/.
             ssh hmc << EOF
             scp -p /tmp/funcion_no_borrar.sh ${serv}:/tmp/.
-            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}"
+            ssh ${serv} 'bash -s' <  /tmp/funcion_no_borrar.sh "${serv}" "${user}"
             ssh ${serv} 'rm -f /tmp/funcion_no_borrar.sh'
 EOF
             ssh hmc 'rm -f /tmp/funcion_no_borrar.sh'
@@ -169,7 +188,7 @@ EOF
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}"
+            ssh hmc 'ssh admunix 'ssh "${serv}" 'bash -s''' <  funcion_no_borrar.sh "${serv}" "${user}"
             rm -f funcion_no_borrar.sh
     fi
 
@@ -177,16 +196,29 @@ EOF
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
-            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}"
+            ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${user}"
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
-done 3< servidores_ftp.txt
+done 3< rotado_password.txt
 continua
 clear
 
 # Borramos fichero temporal
 rm -f /home/mdearri2/vodafone.sh
 
-sed $'s/[^[:print:]\t]//g' stop_ftp.log | grep -Ei "ENTORNO|Vodafone-IT" > stop_ftp.csv
-perl -npi -e "s/Press ENTER to continue ...//g" stop_ftp.csv
+##sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Vodafone-IT" > rotado_password.csv
+sed $'s/[^[:print:]\t]//g' rotado_password.log | grep -E "COMPROBACION|Pre-Production|Production" > rotado_password.csv
+perl -npi -e "s/Press ENTER to continue ...//g" rotado_password.csv
+
+# Ponemos tipo de usuario
+
+##echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO" > temporal_script.tmp
+##cat rotado_password.csv | awk ' NR != 1'| while read line
+##do
+##    usuario=$(echo "${line}" | awk -F";" '{print $4}')
+##    tipo=$(gawk -v a="${usuario}" '$1==a {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt)
+##    echo "${line};${tipo}" >> temporal_script.tmp
+##done
+
+##mv temporal_script.tmp  rotado_password.csv

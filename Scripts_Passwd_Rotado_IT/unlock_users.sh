@@ -23,7 +23,7 @@ echo "Tratamos servidor ${1} y usuario ${2}"
 
 
 # Desbloqueamos el usuario
-passwd -u "${2}"
+passwd -u ${2}
 
 if [ $? -eq 0 ]
     then 
@@ -76,7 +76,7 @@ EOF
 
 unlock_user_ono ()
 {
-ssh "${serv}" 'bash'<< EOF
+ssh ${serv} 'bash'<< EOF
 $(typeset -f funcion)
 funcion ${serv} ${user}
 EOF
@@ -114,7 +114,7 @@ if [ -f $0.flag ]
         continua
         exit 0
         else
-        touch  "$0".flag 
+        touch  $0.flag 
 fi
      trap 'rm -f $0.flag' EXIT
 
@@ -126,9 +126,9 @@ fi
 #                                                     #
 #               Menu Hardenizacion                    #
 #                                                     #
-#              Fecha -> 06/02/2023                    #
+#              Fecha -> 08/03/2023                    #
 #                                                     #
-#     v1.4  -- Miguel Angel de Arriba Gutierrez       #
+#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
 #                                                     #
 #######################################################
 
@@ -149,15 +149,17 @@ continua
 
 # Creamos cabecera CSV
 echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO"
-
+rm -f para_CSV_de_ejecutados.csv
 
 while IFS=';' read -r serv user <&3 
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    #identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt) 
+    identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+    aplicacion=$(gawk -v a="${serv}" '$2==a {print $5}' 'FS=;' ficheros/master_maquinas.txt)
+    entorno=$(gawk -v a="${serv}" '$2==a {print $4}' 'FS=;' ficheros/master_maquinas.txt)
     
-  if [ "${red}" == "VODAFONE" ]
+  if [ ${red} == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -171,7 +173,7 @@ EOF
             rm -f funcion_no_borrar.sh
     fi 
 
-    if [ "${red}" == "TELE2" ]
+    if [ ${red} == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -179,13 +181,18 @@ EOF
             rm -f funcion_no_borrar.sh
     fi
 
-    if [ "${red}" == "ONO" ]
+    if [ ${red} == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
             ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${user}"
             rm -f funcion_no_borrar.sh
     fi
+
+    # Sacamos LOG para actualizar CSV de EJECUTADOS
+
+    FECHA=$(date +%d/%m/%y)
+    echo "${FECHA};${identificador};${serv};${user};${aplicacion};${entorno};DESBLOQUEAR" >> para_CSV_de_ejecutados.csv
  } 3<&-
 done 3< unlock_users.txt
 continua
@@ -200,7 +207,7 @@ perl -npi -e "s/Press ENTER to continue ...//g" unlock_users.csv
 # Ponemos tipo de usuario
 
 echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO" > temporal_script.tmp
-cat unlock_users.csv | awk ' NR != 1'| while read -r line
+cat unlock_users.csv | awk ' NR != 1'| while read line
 do
     usuario=$(echo "${line}" | awk -F";" '{print $4}')
     tipo=$(gawk -v a="${usuario}" '$1==a {print $2}' 'FS=;' ficheros/tipo_listado_usuarios.txt)

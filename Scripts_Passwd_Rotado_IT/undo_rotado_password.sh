@@ -139,9 +139,9 @@ fi
 #                                                     #
 #               Menu Hardenizacion                    #
 #                                                     #
-#              Fecha -> 06/02/2023                    #
+#              Fecha -> 08/03/2023                    #
 #                                                     #
-#     v1.4  -- Miguel Angel de Arriba Gutierrez       #
+#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
 #                                                     #
 #######################################################
 
@@ -162,15 +162,17 @@ continua
 
 # Creamos cabecera CSV
 echo "FECHA;SERVIDOR;ENTORNO;USUARIO;REALIZADO OK;COMPROBACION;SISTEMA;TIPO USUARIO"
-
+rm -f para_CSV_de_ejecutados.csv
 
 while IFS=';' read -r serv user <&3 
 do
  {
     red=$(gawk -v a="${serv}" '$2==a {print $3}' 'FS=;' ficheros/master_maquinas.txt)
-    #identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
-
-   if [ "${red}" == "VODAFONE" ]
+    identificador=$(gawk -v a="${serv}" '$2==a {print $1}' 'FS=;' ficheros/master_maquinas.txt)
+    aplicacion=$(gawk -v a="${serv}" '$2==a {print $5}' 'FS=;' ficheros/master_maquinas.txt)
+    entorno=$(gawk -v a="${serv}" '$2==a {print $4}' 'FS=;' ficheros/master_maquinas.txt)
+    
+    if [ ${red} == "VODAFONE" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -184,7 +186,7 @@ EOF
             rm -f funcion_no_borrar.sh
     fi 
 
-    if [ "${red}" == "TELE2" ]
+    if [ ${red} == "TELE2" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
@@ -192,13 +194,18 @@ EOF
             rm -f funcion_no_borrar.sh
     fi
 
-    if [ "${red}" == "ONO" ]
+    if [ ${red} == "ONO" ]
         then
             typeset -f funcion > funcion_no_borrar.sh
             echo "funcion \${1} \${2}" >> funcion_no_borrar.sh
             ssh "${serv}" 'bash -s' <  funcion_no_borrar.sh "${serv}" "${user}"
             rm -f funcion_no_borrar.sh
     fi
+
+    # Sacamos LOG para actualizar CSV de EJECUTADOS
+
+    FECHA=$(date +%d/%m/%y)
+    echo "${FECHA};${identificador};${serv};${user};${aplicacion};${entorno};UNDO_APU" >> para_CSV_de_ejecutados.csv
  } 3<&-
 done 3< undo_rotado_password.txt
 continua

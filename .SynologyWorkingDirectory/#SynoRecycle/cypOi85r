@@ -1,4 +1,4 @@
-#! /bin/bash -p
+#! /bin/bash-p
 
 export LANG=en_US.UTF-8
 
@@ -18,39 +18,46 @@ funcion ()
 {
 export LANG=en_US.UTF-8
 
-sistema=$(uname)
+carp_log=$(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 | grep carp_log | wc -l)
+carp_lts=$(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 | grep carp_lts | wc -l)
+cyberark=$(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 | grep cyberark | wc -l)
+cyberlog=$(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 | grep cyberlog | wc -l)
 
-if [ "${sistema}" == "SunOS" ]
+echo "Comprobando servidor ${1}"
+
+if [ ${carp_log} -eq 1 ]
     then
-        echo "El sistema de ${1} es Solaris"
-        
-        echo "Paramos servicio FTP de ${1}"
-        svcadm disable -t ftp
-        echo "${1};Vodafone-IT;${sistema};Parada servicio"
+        CLOG="SI"
+    else
+        CLOG="NO"
 fi
 
-if [ "${sistema}" == "Linux" ]
+if [ ${carp_lts} -eq 1 ]
     then
-        echo "El sistema de ${1} es Linux"
-        
-        # Comprobamos el servicio
-        servicio=$(rpm -q  vsftpd | grep -i installed | wc -l)
-        
-        if [ ${servicio} -eq 1 ]
-            then
-                echo "Desinstalamos servicio FTP de ${1}"
-                rpm -e vsftpd
-                echo "${1};Vodafone-IT;${sistema};Desinstalacion servicio"
-            else
-                echo "Servicio FTP no instalado en ${1}"
-        fi
-
+        CLTS="SI"
+    else
+        CLTS="NO"
 fi
 
+if [ ${cyberark} -eq 1 ]
+    then
+        CA="SI"
+    else
+        CA="NO"
+fi
+
+if [ ${cyberlog} -eq 1 ]
+    then
+        CL="SI"
+    else
+        CL="NO"
+fi
+
+echo "${1};Vodafone-IT;${CLOG};${CLTS};${CA};${CL}"
 }
 
 ## FUNCIONES EN DESUSO AL EJECUTAR TODO EN BUCLE INICIAL
-stop_ftp_tele2 ()
+saca_cyberark_tele2 ()
 {
 ssh ADMUNIX << EOF 
 ssh ${serv}  'bash' 
@@ -59,7 +66,7 @@ funcion ${serv}
 EOF
 }
 
-stop_ftp_vodafone ()
+saca_cyberark_vodafone ()
 {
 ssh hmc << EOF
 ssh ${serv} 'bash'
@@ -68,7 +75,7 @@ funcion ${serv}
 EOF
 }
 
-stop_ftp_ono ()
+saca_cyberark_ono ()
 {
 ssh ${serv} 'bash'<< EOF
 $(typeset -f funcion)
@@ -76,10 +83,12 @@ funcion ${serv}
 EOF
 }
 
+
+
 #################### FUNCION MAIN ####################
 
 f_master="ficheros/master_maquinas.txt"
-f_uso="servidores_ftp.txt"
+f_uso="servidores_cyberark.txt"
 
 if [ ! -f ${f_master} ]
     then
@@ -120,20 +129,20 @@ fi
 #                                                     #
 #               Menu Hardenizacion                    #
 #                                                     #
-#              Fecha -> 08/03/2023                    #
+#              Fecha -> 06/02/2023                    #
 #                                                     #
-#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
+#     v1.4  -- Miguel Angel de Arriba Gutierrez       #
 #                                                     #
 #######################################################
 
  
-    ==========================================================
-                       HARDENIZACION FTP
-    ==========================================================
+       ==========================================================
+            CHEQUEO CYBERARK (CARP* CYBERARK CYBERLOG) 
+       ==========================================================
      
-     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y servidores_ftp.txt 
+     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y servidores_cyberark.txt
            ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
-           servidores_ftp.txt  -> Listado de maquinas a tratar
+           servidores_cyberark.txt -> Listado de maquinas a tratar
        
 EOF
 
@@ -142,9 +151,11 @@ continua
 ############################################################
 
 
-# Creamos cabecera CSV
 
-echo "SERVIDOR;ENTORNO;SISTEMA;ACCION"
+
+# Creamos cabecera CSV
+echo "SERVIDOR;ENTORNO;CARP_LOG;CARP_LTS;CYBERARK;CYBERLOG"
+
 while IFS=';' read -r serv user <&3 
 do
  {
@@ -181,12 +192,11 @@ EOF
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
-done 3< servidores_ftp.txt
+done 3< servidores_cyberark.txt
 continua
 clear
 
 # Borramos fichero temporal
 rm -f /home/mdearri2/vodafone.sh
-
-sed $'s/[^[:print:]\t]//g' stop_ftp.log | grep -Ei "ENTORNO|Vodafone-IT" > stop_ftp.csv
-perl -npi -e "s/Press ENTER to continue ...//g" stop_ftp.csv
+sed $'s/[^[:print:]\t]//g' check_cyberark.log | grep -Ei "ENTORNO|Vodafone-IT" > check_cyberark.csv
+perl -npi -e "s/Press ENTER to continue ...//g" check_cyberark.csv

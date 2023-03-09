@@ -18,39 +18,45 @@ funcion ()
 {
 export LANG=en_US.UTF-8
 
+echo "Tratamos servidor ${1}" 
+
 sistema=$(uname)
 
 if [ "${sistema}" == "SunOS" ]
     then
-        echo "El sistema de ${1} es Solaris"
-        
-        echo "Paramos servicio FTP de ${1}"
-        svcadm disable -t ftp
-        echo "${1};Vodafone-IT;${sistema};Parada servicio"
-fi
+        # Normalizamos Rotado y aplicamos a TODOS los usuarios excepto root, bloqueados y nologin
+        awk '/MAXWEEKS=/ { $1 = "MAXWEEKS=13" } { print }' /etc/default/passwd > /etc/default/passwd.new
+        mv /etc/default/passwd.new /etc/default/passwd
+        for u in $(logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") { print $1 }')
+            do
+                passwd -x 91 $u
+            done
+      
 
-if [ "${sistema}" == "Linux" ]
-    then
-        echo "El sistema de ${1} es Linux"
-        
-        # Comprobamos el servicio
-        servicio=$(rpm -q  vsftpd | grep -i installed | wc -l)
-        
-        if [ ${servicio} -eq 1 ]
-            then
-                echo "Desinstalamos servicio FTP de ${1}"
-                rpm -e vsftpd
-                echo "${1};Vodafone-IT;${sistema};Desinstalacion servicio"
-            else
-                echo "Servicio FTP no instalado en ${1}"
-        fi
+        # Normalizamos periodo para cambio de password y aplicamos a TODOS los usuarios excepto root, bloqueados y nologin
+        awk '/MINWEEKS=/ { $1 = "MINWEEKS=1" } { print }' /etc/default/passwd > /etc/default/passwd.new
+        mv /etc/default/passwd.new /etc/default/passwd
+        for u in $(logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $10 != "7" ) { print $1 }')
+            do
+                passwd -n 7 $u
+            done
+  
 
+        # Normalizamos aviso cambio password y aplicamos a TODOS los usuarios excepto root, bloqueados y nologin
+        awk '/WARNWEEKS=/ { $1 = "WARNWEEKS=1" } { print }' /etc/default/passwd > /etc/default/passwd.new
+        mv /etc/default/passwd.new /etc/default/passwd
+        for u in $(logins -ox | awk -F: '( $1 != "root" && $8 != "LK" && $8 != "NL") && ( $12 != "7") { print $1 }')
+            do
+                passwd -w 7 $u
+            done
+      
+           
 fi
 
 }
 
 ## FUNCIONES EN DESUSO AL EJECUTAR TODO EN BUCLE INICIAL
-stop_ftp_tele2 ()
+normalizado_todos_usuarios_solaris_tele2 ()
 {
 ssh ADMUNIX << EOF 
 ssh ${serv}  'bash' 
@@ -59,16 +65,17 @@ funcion ${serv}
 EOF
 }
 
-stop_ftp_vodafone ()
+normalizado_todos_usuarios_solaris_vodafone ()
 {
 ssh hmc << EOF
 ssh ${serv} 'bash'
 $(typeset -f funcion)
 funcion ${serv}
-EOF
+EOFodafone.sh
+sh vodafone.sh
 }
 
-stop_ftp_ono ()
+normalizado_todos_usuarios_solaris_ono ()
 {
 ssh ${serv} 'bash'<< EOF
 $(typeset -f funcion)
@@ -78,8 +85,8 @@ EOF
 
 #################### FUNCION MAIN ####################
 
-f_master="ficheros/master_maquinas.txt"
-f_uso="servidores_ftp.txt"
+f_master="master_maquinas.txt"
+f_uso="normalizado_todos_usuarios_solaris.txt"
 
 if [ ! -f ${f_master} ]
     then
@@ -120,20 +127,20 @@ fi
 #                                                     #
 #               Menu Hardenizacion                    #
 #                                                     #
-#              Fecha -> 08/03/2023                    #
+#              Fecha -> 06/02/2023                    #
 #                                                     #
-#     v2.0  -- Miguel Angel de Arriba Gutierrez       #
+#     v1.4  -- Miguel Angel de Arriba Gutierrez       #
 #                                                     #
 #######################################################
 
  
-    ==========================================================
-                       HARDENIZACION FTP
-    ==========================================================
+    =====================================================================================
+                NORMALIZADO DE PARAMETROS Y USUARIOS EN MAQUINAS SOLARIS
+    =====================================================================================
      
-     NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y servidores_ftp.txt 
-           ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
-           servidores_ftp.txt  -> Listado de maquinas a tratar
+     NOTA: Se usaran los ficheros master_maquinas.txt y normalizado_maquinas_solaris.txt 
+           master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
+           normalizado_todos_usuarios_solaris.txt -> Listado de maquinas a tratar
        
 EOF
 
@@ -142,9 +149,6 @@ continua
 ############################################################
 
 
-# Creamos cabecera CSV
-
-echo "SERVIDOR;ENTORNO;SISTEMA;ACCION"
 while IFS=';' read -r serv user <&3 
 do
  {
@@ -181,12 +185,12 @@ EOF
             rm -f funcion_no_borrar.sh
     fi
  } 3<&-
-done 3< servidores_ftp.txt
+done 3< normalizado_todos_usuarios_solaris.txt
 continua
 clear
 
 # Borramos fichero temporal
 rm -f /home/mdearri2/vodafone.sh
 
-sed $'s/[^[:print:]\t]//g' stop_ftp.log | grep -Ei "ENTORNO|Vodafone-IT" > stop_ftp.csv
-perl -npi -e "s/Press ENTER to continue ...//g" stop_ftp.csv
+sed $'s/[^[:print:]\t]//g' normalizado_todos_usuarios_solaris.log | grep -Ei "ENTORNO|Vodafone-IT" > normalizado_todos_usuarios_solaris.csv
+perl -npi -e "s/Press ENTER to continue ...//g" normalizado_todos_usuarios_solaris.csv
