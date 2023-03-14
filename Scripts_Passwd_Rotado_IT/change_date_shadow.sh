@@ -40,10 +40,12 @@ if [ "${sistema}" == "SunOS" ]
             do
                 if [ "$(nawk -v user="${u}" -v dato="${days1}" '$1==user && $3==dato {print NR}' 'FS=:' /etc/shadow)" != "" ]
                     then
-                    buscaren=$(nawk -v user="${u}" -v dato="${days1}" '$1==user && $3==dato {print NR}' 'FS=:' /etc/shadow)
-                    perl -p -i  -e "s/${days1}/${days2}/ if $. == ${buscaren}" /etc/shadow
-                    chmod 0000 /etc/shadow
-                    echo "${1};${u};Vodafone-IT;${2};${days1};${days2}"
+                        buscaren=$(nawk -v user="${u}" -v dato="${days1}" '$1==user && $3==dato {print NR}' 'FS=:' /etc/shadow)
+                        perl -p -i  -e "s/${days1}/${days2}/ if $. == ${buscaren}" /etc/shadow
+                        chmod 0000 /etc/shadow
+                        useradd pepePDS
+                        userdel pepePDS
+                        echo "${1};${u};Vodafone-IT;${2};${days1};${days2}"
                 fi
 
 
@@ -51,19 +53,19 @@ if [ "${sistema}" == "SunOS" ]
 fi
 
 if [ "${sistema}" == "Linux" ]
-    then
-      
-                for u in $(awk -F: '($2 != "*" && $2 != "!!" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort)
-                    do   
-                        if [ "$(awk -v user="${u}" -v dato="${days1}" -F":" 'BEGIN {OFS=":"} { if($1 == user && $3 == dato) {print NR} }' /etc/shadow)" != "" ]
-                            then
-                                buscaren=$(awk -v user="${u}" -v dato="${days1}" -F":" 'BEGIN {OFS=":"} { if($1 == user && $3 == dato) {print NR} }' /etc/shadow)
-                                sed -i "${buscaren}s/${days1}/${days2}/g" /etc/shadow
-                                chmod 0000 /etc/shadow
-                                echo "${1};${u};Vodafone-IT;${2};${days1};${days2}"
-                        fi
-                        
-                    done
+    then   
+        for u in $(awk -F: '($2 != "*" && $2 != "!!" && $2 != "!" && $2 != "!*" && $1 != "root") {print $1}' /etc/shadow | sort)
+            do   
+                if [ "$(awk -v user="${u}" -v dato="${days1}" -F":" 'BEGIN {OFS=":"} { if($1 == user && $3 == dato) {print NR} }' /etc/shadow)" != "" ]
+                    then
+                        buscaren=$(awk -v user="${u}" -v dato="${days1}" -F":" 'BEGIN {OFS=":"} { if($1 == user && $3 == dato) {print NR} }' /etc/shadow)
+                        sed -i "${buscaren}s/${days1}/${days2}/g" /etc/shadow
+                        chmod 0000 /etc/shadow
+                        useradd pepePDS
+                        userdel pepePDS
+                        echo "${1};${u};Vodafone-IT;${2};${days1};${days2}"
+                fi   
+            done
                     
 fi 
 
