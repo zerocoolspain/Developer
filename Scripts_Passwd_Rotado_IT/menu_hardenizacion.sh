@@ -60,7 +60,7 @@ do
 #######################################################
 
 NOTAS: 
-        - Para todas las opciones se usa el fichero ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED 
+        - Para todas las opciones se usa el fichero ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: ID;MAQUINA;RED;ENTORNO;APLICATIVOS 
         - Para la opcion 1 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar
         - Para la opcion 2 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar
         - Para la opcion 3 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar
@@ -75,6 +75,7 @@ NOTAS:
         - Para la opcion 12 ademas -> saca_info_usuario.txt -> Listado de maquinas a tratar
         - Para la opcion 13 ademas -> escaneo_maquina.txt -> Listado de maquinas a tratar
         - Para la opcion 14 ademas -> workaround_shadow.txt -> Listado de maquinas y usuarios a tratar con formato: MAQUINA;USUARIO
+        - Para la opcion 15 ademas -> change_date_shadow.txt -> Listado de maquinas a tratar
 
 =========================================
                MAIN MENU
@@ -95,10 +96,9 @@ NOTAS:
 12.  SACAR INFORMACION USUARIOS MAQUINAS (BLOQUEADO, ROTADO, HARDENIZADO OK/NOK)
 13.  ESCANEO MAQUINAS (USUARIOS, CYBERLOG, CYBEARK, CARP*, CCS_MON, BLOQUEO, ROTADO, HARDENIZADO OK/NOK)
 14.  WORKAROUND SHADOW USUARIOS
+15.  CAMBIO FECHA ESPECÍFICA SHADOW USUARIOS (SE LE PASA COMO PARAMETROS UNA FECHA A BUSCAR Y OTRA POR LA QUE SE VA A SUSTITUIR)
 
- 0.  Salir
-
-q.  Salir
+    q.  Salir
 
 EOF
 
@@ -120,6 +120,7 @@ EOF
  12) ${RUTA}/saca_info_usuarios.sh | tee saca_info_usuario.log;;
  13) ${RUTA}/escaneo_maquinas.sh | tee escaneo_maquina.log;;
  14) ${RUTA}/workaround_shadow.sh | tee workaround_shadow.log;;
+ 15) ${RUTA}/change_date_shadow.sh | tee change_date_shadow.log;;
 
    q)  rm -f $0.flag;echo; echo; exit 0;;
 
