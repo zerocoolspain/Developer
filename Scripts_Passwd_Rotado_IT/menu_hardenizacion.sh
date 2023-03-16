@@ -120,7 +120,14 @@ EOF
  12) ${RUTA}/saca_info_usuarios.sh | tee saca_info_usuario.log;;
  13) ${RUTA}/escaneo_maquinas.sh | tee escaneo_maquina.log;;
  14) ${RUTA}/workaround_shadow.sh | tee workaround_shadow.log;;
- 15) ${RUTA}/change_date_shadow.sh | tee change_date_shadow.log;;
+ 15) clear
+     printf "Introduce la fecha a buscar: "
+     read FECHA_BUSCAR
+     printf "Introduce la fecha por la que se va a sustituir: "
+     read FECHA_SUSTITUIR
+     printf "La fecha a buscar es: ${FECHA_BUSCAR} y la fecha por la que se va a sustituir es: ${FECHA_SUSTITUIR} \n"
+     continua
+     ${RUTA}/change_date_shadow.sh | tee change_date_shadow.log;;
 
    q)  rm -f $0.flag;echo; echo; exit 0;;
 
