@@ -127,7 +127,7 @@ EOF
      read FECHA_SUSTITUIR
      printf "La fecha a buscar es: ${FECHA_BUSCAR} y la fecha por la que se va a sustituir es: ${FECHA_SUSTITUIR} \n"
      continua
-     ${RUTA}/change_date_shadow.sh | tee change_date_shadow.log;;
+     ${RUTA}/change_date_shadow.sh ${FECHA_BUSCAR} ${FECHA_SUSTITUIR} | tee change_date_shadow.log;;
 
    q)  rm -f $0.flag;echo; echo; exit 0;;
 
