@@ -90,6 +90,7 @@ fi
      NOTA: Se usaran los ficheros ficheros/master_maquinas.txt y servidores_cyberark.txt
            ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: MAQUINA;RED
            servidores_cyberark.txt -> Listado de maquinas a tratar
+           pass.txt -> Fichero con el password nuevo con formato: usuario:password
        
 EOF
 

@@ -63,7 +63,7 @@ NOTAS:
         - Para todas las opciones se usa el fichero ficheros/master_maquinas.txt -> Listado de maquinas (unicas) y red con formato: ID;MAQUINA;RED;ENTORNO;APLICATIVOS 
         - Para la opcion 1 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar
         - Para la opcion 2 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar
-        - Para la opcion 3 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar
+        - Para la opcion 3 ademas -> servidores_cyberark.txt -> Listado de maquinas a tratar -- pass.txt -> Fichero con el password nuevo con formato: usuario:password
         - Para la opcion 4 ademas -> servidores_ftp.txt -> Listado de maquinas a tratar
         - Para la opcion 5 ademas -> servidores_ftp.txt -> Listado de maquinas a tratar
         - Para la opcion 6 ademas -> block_users.txt -> Listado de maquinas y usuarios a tratar con formato: MAQUINA;USUARIO
