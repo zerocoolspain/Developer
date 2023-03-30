@@ -77,6 +77,7 @@ NOTAS:
         - Para la opcion 13 ademas -> escaneo_maquina.txt -> Listado de maquinas a tratar
         - Para la opcion 14 ademas -> workaround_shadow.txt -> Listado de maquinas y usuarios a tratar con formato: MAQUINA;USUARIO
         - Para la opcion 15 ademas -> change_date_shadow.txt -> Listado de maquinas a tratar
+        - Para la opcion 16 ademas -> workaround_shadow_manual.txt -> Listado de maquinas, usuarios y fechas a tratar con formato: MAQUINA;USUARIO;FECHA
 
 =========================================
                MAIN MENU
@@ -97,7 +98,8 @@ NOTAS:
 12.  SACAR INFORMACION USUARIOS MAQUINAS (BLOQUEADO, ROTADO, HARDENIZADO OK/NOK)
 13.  ESCANEO MAQUINAS (USUARIOS, CYBERLOG, CYBEARK, CARP*, CCS_MON, BLOQUEO, ROTADO, HARDENIZADO OK/NOK)
 14.  WORKAROUND SHADOW USUARIOS
-15.  CAMBIO FECHA ESPECÍFICA SHADOW USUARIOS (SE LE PASA COMO PARAMETROS UNA FECHA A BUSCAR Y OTRA POR LA QUE SE VA A SUSTITUIR)
+15.  CAMBIO FECHA ESPECÍFICA SHADOW USUARIOS (SE LE PASA COMO PARAMETROS UNA FECHA A BUSCAR Y OTRA POR LA QUE SE VA A SUSTITUIR en TODA LA MAQUINA)
+16.  CAMBIO FECHA ESPECÍFICA SHADOW USUARIOS PARA CAMBIAR A USUARIOS ESPECIFICOS
 
     q.  Salir
 
@@ -129,7 +131,7 @@ EOF
      printf "La fecha a buscar es: ${FECHA_BUSCAR} y la fecha por la que se va a sustituir es: ${FECHA_SUSTITUIR} \n"
      continua
      ${RUTA}/change_date_shadow.sh ${FECHA_BUSCAR} ${FECHA_SUSTITUIR} | tee change_date_shadow.log;;
-
+ 16) ${RUTA}/workaround_shadow_manual.sh | tee workaround_shadow_manual.log;;
    q)  rm -f $0.flag;echo; echo; exit 0;;
 
   esac
